@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Types>
+    <Type>
+        <Name>System.Array</Name>
+        <Members>
+            <ScriptMethod>
+                <Name>IndexOf</Name>
+                <Script>
+                    param ( $value )
+                    [System.Array]::IndexOf($this, $value)
+                </Script>
+            </ScriptMethod>
+        </Members>
+    </Type>
+    <Type>
+        <Name>System.IO.DirectoryInfo</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>Size</Name>
+                <GetScriptBlock>
+                    $null
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+    <Type>
+        <Name>System.IO.FileInfo</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>Size</Name>
+                <GetScriptBlock>
+                    switch ($this.Length)
+                    {
+                        # Formatted as Windows displays.
+                        { $_ -gt 1tb * 1000 } { "{0,6:0.##} PB" -f ( $_ / 1pb ); break }
+                        { $_ -gt 1gb * 1000 } { "{0,6:0.##} TB" -f ( $_ / 1tb ); break }
+                        { $_ -gt 1mb * 1000 } { "{0,6:0.##} GB" -f ( $_ / 1gb ); break }
+                        { $_ -gt 1kb * 1000 } { "{0,6:0.##} MB" -f ( $_ / 1mb ); break }
+                        { $_ -gt 1000 } { "{0,6:0.##} KB" -f ( $_ / 1kb ); break }
+                        default { "{0,6:0} B" -f $_; break }
+                    }
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+    <Type>
+        <Name>Microsoft.PowerShell.Commands.HistoryInfo</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>ExecutionTime</Name>
+                <GetScriptBlock>
+                    $this.EndExecutionTime - $this.StartExecutionTime
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+</Types>
+
+<!-- vim: set fenc=utf-8 et sts=4 sw=4 ts=8: -->
