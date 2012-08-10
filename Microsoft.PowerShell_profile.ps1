@@ -95,7 +95,7 @@ function Measure-Group
         [string[]] $Group,
 
         [Parameter(Mandatory=$true, Position=1)]
-        [string[]] $Property,
+        [string] $Property,
 
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         $InputObject,
@@ -129,11 +129,11 @@ function Measure-Group
     end
     {
         [hashtable[]] $ExpandedProperties = foreach ($p in $Group) { @{l=$p; e={$_.Group[0].$p}.GetNewClosure()} }
-         if ( $Average ) { $ExpandedProperties += @{l="Average"; e={$_.Pivot.Average}} }
-         if ( $Count ) { $ExpandedProperties += @{l="Count"; e={$_.Pivot.Count}} }
-         if ( $Maximum ) { $ExpandedProperties += @{l="Maximum"; e={$_.Pivot.Maximum}} }
-         if ( $Minimum ) { $ExpandedProperties += @{l="Minimum"; e={$_.Pivot.Minimum}} }
-         if ( $Sum ) { $ExpandedProperties += @{l="Sum"; e={$_.Pivot.Sum}} }
+        if ( $Average ) { $ExpandedProperties += @{l="Average"; e={$_.Pivot.Average}} }
+        if ( $Count ) { $ExpandedProperties += @{l="Count"; e={$_.Pivot.Count}} }
+        if ( $Maximum ) { $ExpandedProperties += @{l="Maximum"; e={$_.Pivot.Maximum}} }
+        if ( $Minimum ) { $ExpandedProperties += @{l="Minimum"; e={$_.Pivot.Minimum}} }
+        if ( $Sum ) { $ExpandedProperties += @{l="Sum"; e={$_.Pivot.Sum}} }
 
         $Objects | group-object $Group | select-object *, @{l="Pivot"; e={$_.Group | measure-object $Property -Average:$Average -Maximum:$Maximum -Minimum:$Minimum -Sum:$Sum}} | select-object $ExpandedProperties
     }
