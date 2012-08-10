@@ -13,6 +13,17 @@
         </Members>
     </Type>
     <Type>
+        <Name>System.Globalization.CultureInfo</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>LCIDHex</Name>
+                <GetScriptBlock>
+                    "0x{0:X}" -f $this.LCID
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+    <Type>
         <Name>System.IO.DirectoryInfo</Name>
         <Members>
             <ScriptProperty>
