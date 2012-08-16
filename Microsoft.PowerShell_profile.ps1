@@ -15,9 +15,17 @@ function prompt
     }
 
     # Prompt
-    $(if (test-path variable:/PSDebugContext) { '[DBG]: ' } else { '' }) `
-        + 'PS ' + '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + $(Get-Location) + "`n" `
-        + '>' * $nestedpromptlevel + '> '
+    if ($PSDebugContext) {
+        write-prompttoken 'DBG' Red -nonewline
+    }
+
+    write-host $('PS ' + '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + $PWD)
+
+    if ($git = get-gitstatus) {
+        write-prompttoken $git.Branch Cyan -nonewline
+    }
+
+    '>' * $NestedPromptLevel + '> '
 }
 
 # Do not beep in the prompt by default.
@@ -32,6 +40,47 @@ $null = register-objectevent -input $BeepTimer -event 'Elapsed' -supportevent -a
 
 # Increase history count.
 $MaximumHistoryCount = 100
+
+# Gets information about the current git repo (if in one).
+function Get-Git
+{
+    # Check for git in the PATH.
+    $git = get-command git -type Application -ea SilentlyContinue
+
+    # Check for git as installed by GitHub for Windows.
+    if (!$git) {
+        $bin = join-path $env:LocalAppData 'GitHub\PortableGit*\bin' -resolve -ea SilentlyContinue
+        if ($bin) {
+            $env:PATH = $env:PATH + ";$bin"
+            $git = get-command git -type Application -ea SilentlyContinue
+        }
+    }
+
+    $git
+}
+
+function Get-GitStatus
+{
+    if (test-gitrepository -and $git = get-git) {
+        $branch = git branch | select-string "\* (\w+)" | foreach { $_.Matches.Groups[1].Value }
+        new-object PSObject -property @{ "Branch" = $branch; "Git" = $git }
+    }
+}
+
+# Checks if we are in a git repository
+function Test-GitRepository
+{
+    $dir = resolve-path .
+    while ($dir) {
+        if (join-path $dir '.git' -resolve -ea SilentlyContinue) {
+            return $true
+        }
+
+        $dir = split-path $dir -parent | resolve-path -ea SilentlyContinue
+    }
+
+    $false
+}
 
 # Pauses until user input
 function Read-Prompt
@@ -84,6 +133,26 @@ function Read-Prompt
         $Host.UI.RawUI.SetBufferContents($line, $space)
         $Host.UI.RawUI.CursorPosition = $current
     }
+}
+
+function Write-PromptToken
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory=$true, Position=0)]
+        $Token,
+
+        [Parameter(Mandatory=$true, Position=1)]
+        [ConsoleColor] $Foreground,
+
+        [Parameter()]
+        [switch] $NoNewLine
+    )
+
+    write-host '[' -foreground Yellow -nonewline
+    write-host $Token -foreground $Foreground -nonewline
+    write-host '] ' -foreground Yellow -nonewline:$NoNewLine
 }
 
 function Select-Unique
