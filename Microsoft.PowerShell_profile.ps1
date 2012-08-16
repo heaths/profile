@@ -14,17 +14,20 @@ function prompt
         $BeepTimer.Start()
     }
 
-    # Prompt
+    # Show if debugging in the prompt.
     if ($PSDebugContext) {
-        write-prompttoken 'DBG' Red -nonewline
+        &$da817f7daa4f4b8db65c7e8add620143_wp 'DBG' Red
     }
 
+    # Show current location in the prompt.
     write-host $('PS ' + '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + $PWD)
 
-    if ($git = get-gitstatus) {
-        write-prompttoken $git.Branch Cyan -nonewline
+    # Show current git branch in the prompt.
+    if ($git = &$da817f7daa4f4b8db65c7e8add620143_gs) {
+        &$da817f7daa4f4b8db65c7e8add620143_wp $git.Branch Cyan
     }
 
+    # Show the nesting and default separators in the prompt.
     '>' * $NestedPromptLevel + '> '
 }
 
@@ -40,47 +43,6 @@ $null = register-objectevent -input $BeepTimer -event 'Elapsed' -supportevent -a
 
 # Increase history count.
 $MaximumHistoryCount = 100
-
-# Gets information about the current git repo (if in one).
-function Get-Git
-{
-    # Check for git in the PATH.
-    $git = get-command git -type Application -ea SilentlyContinue
-
-    # Check for git as installed by GitHub for Windows.
-    if (!$git) {
-        $bin = join-path $env:LocalAppData 'GitHub\PortableGit*\bin' -resolve -ea SilentlyContinue
-        if ($bin) {
-            $env:PATH = $env:PATH + ";$bin"
-            $git = get-command git -type Application -ea SilentlyContinue
-        }
-    }
-
-    $git
-}
-
-function Get-GitStatus
-{
-    if (test-gitrepository -and $git = get-git) {
-        $branch = git branch | select-string "\* (\w+)" | foreach { $_.Matches.Groups[1].Value }
-        new-object PSObject -property @{ "Branch" = $branch; "Git" = $git }
-    }
-}
-
-# Checks if we are in a git repository
-function Test-GitRepository
-{
-    $dir = resolve-path .
-    while ($dir) {
-        if (join-path $dir '.git' -resolve -ea SilentlyContinue) {
-            return $true
-        }
-
-        $dir = split-path $dir -parent | resolve-path -ea SilentlyContinue
-    }
-
-    $false
-}
 
 function Measure-Group
 {
@@ -186,26 +148,6 @@ function Read-Prompt
         $Host.UI.RawUI.SetBufferContents($line, $space)
         $Host.UI.RawUI.CursorPosition = $current
     }
-}
-
-function Write-PromptToken
-{
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory=$true, Position=0)]
-        $Token,
-
-        [Parameter(Mandatory=$true, Position=1)]
-        [ConsoleColor] $Foreground,
-
-        [Parameter()]
-        [switch] $NoNewLine
-    )
-
-    write-host '[' -foreground Yellow -nonewline
-    write-host $Token -foreground $Foreground -nonewline
-    write-host '] ' -foreground Yellow -nonewline:$NoNewLine
 }
 
 function Select-Unique
@@ -322,6 +264,68 @@ filter slow ( [int] $tempo = 100 )
 {
     $_
     start-sleep -milliseconds $tempo
+}
+
+# Private functions
+
+new-variable da817f7daa4f4b8db65c7e8add620143_wp -option Constant -visibility Private -scope Private -value {
+
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory=$true, Position=0)]
+        $Token,
+
+        [Parameter(Mandatory=$true, Position=1)]
+        [ConsoleColor] $Foreground
+    )
+
+    write-host '[' -foreground Yellow -nonewline
+    write-host $Token -foreground $Foreground -nonewline
+    write-host '] ' -foreground Yellow -nonewline
+}
+
+new-variable da817f7daa4f4b8db65c7e8add620143_gs -option Constant -visibility Private -scope Private -value {
+
+    if (&$da817f7daa4f4b8db65c7e8add620143_gr) {
+        if ($git = &$da817f7daa4f4b8db65c7e8add620143_gg) {
+            $branch = &$git branch | select-string '\* (\w+)' | foreach { $_.Matches.Groups[1].Value }
+            new-object PSObject -property @{ 'Branch' = $branch }
+        }
+    }
+}
+
+new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -scope Private -value {
+
+    $dir = resolve-path .
+    while ($dir) {
+        if (join-path $dir '.git' | test-path) {
+            return $true
+        }
+
+        $dir = split-path $dir -parent | resolve-path -ea SilentlyContinue
+    }
+
+    $false
+}
+
+new-variable da817f7daa4f4b8db65c7e8add620143_gg -option Constant -visibility Private -scope Private -value {
+
+    # Check for git in the PATH.
+    $git = get-command git -type Application -ea SilentlyContinue
+
+    # Check for git as installed by GitHub for Windows.
+    if (!$git) {
+        $bin = join-path $env:LocalAppData 'GitHub\PortableGit*\bin' -resolve -ea SilentlyContinue
+        if ($bin) {
+
+            # Append the PATH environment variable for resolution.
+            $env:PATH = $env:PATH + ";$bin"
+            $git = get-command git -type Application -ea SilentlyContinue | select -first 1
+        }
+    }
+
+    $git
 }
 
 # vim: set et sts=4 sw=4 ts=8:
