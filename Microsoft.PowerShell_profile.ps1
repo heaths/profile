@@ -23,7 +23,7 @@ function prompt
     write-host $('PS ' + '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + $PWD)
 
     # Show current git branch in the prompt.
-    if ($git = &$da817f7daa4f4b8db65c7e8add620143_gs) {
+    if ($git = &$da817f7daa4f4b8db65c7e8add620143_gb) {
         &$da817f7daa4f4b8db65c7e8add620143_wp $git.Branch Cyan
     }
 
@@ -285,47 +285,39 @@ new-variable da817f7daa4f4b8db65c7e8add620143_wp -option Constant -visibility Pr
     write-host '] ' -foreground Yellow -nonewline
 }
 
-new-variable da817f7daa4f4b8db65c7e8add620143_gs -option Constant -visibility Private -scope Private -value {
+new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Private -value {
 
-    if (&$da817f7daa4f4b8db65c7e8add620143_gr) {
-        if ($git = &$da817f7daa4f4b8db65c7e8add620143_gg) {
-            $branch = &$git branch | select-string '\* (\w+)' | foreach { $_.Matches.Groups[1].Value }
-            new-object PSObject -property @{ 'Branch' = $branch }
+    if ($dir = &$da817f7daa4f4b8db65c7e8add620143_gr) {
+
+        $branch = join-path $dir 'HEAD' | resolve-path -ea silent | get-content
+
+        if ($branch -match 'ref: refs/heads/(?<b>\w+)') {
+            $branch = $Matches['b']
+
+        } elseif ($branch.length -ge 7) {
+            $branch = 'hash: ' + $branch.Substring(0, 7)
+
         }
+
+        new-object PSObject -property @{ 'Branch' = $branch }
     }
 }
 
-new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -scope Private -value {
+new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -value {
+
+    if ($env:GIT_DIR) {
+        return (resolve-path $env:GIT_DIR -ea silent)
+    }
 
     $dir = resolve-path .
+
     while ($dir) {
-        if (join-path $dir '.git' | test-path) {
-            return $true
+        if ($gd = join-path $dir '.git' | resolve-path -ea silent) {
+            return $gd
         }
 
-        $dir = split-path $dir -parent | resolve-path -ea SilentlyContinue
+        $dir = split-path $dir -parent | resolve-path -ea silent
     }
-
-    $false
-}
-
-new-variable da817f7daa4f4b8db65c7e8add620143_gg -option Constant -visibility Private -scope Private -value {
-
-    # Check for git in the PATH.
-    $git = get-command git -type Application -ea SilentlyContinue
-
-    # Check for git as installed by GitHub for Windows.
-    if (!$git) {
-        $bin = join-path $env:LocalAppData 'GitHub\PortableGit*\bin' -resolve -ea SilentlyContinue
-        if ($bin) {
-
-            # Append the PATH environment variable for resolution.
-            $env:PATH = $env:PATH + ";$bin"
-            $git = get-command git -type Application -ea SilentlyContinue | select -first 1
-        }
-    }
-
-    $git
 }
 
 # vim: set et sts=4 sw=4 ts=8:
