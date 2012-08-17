@@ -288,7 +288,7 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
 
     if ($dir = &$da817f7daa4f4b8db65c7e8add620143_gr) {
 
-        $branch = join-path $dir 'HEAD' | resolve-path -ea silent | get-content
+        $branch = join-path $dir 'HEAD' | resolve-path -ea SilentlyContinue | get-content
 
         if ($branch -match 'ref: refs/heads/(?<b>\w+)') {
             $branch = $Matches['b']
@@ -305,17 +305,17 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
 new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -value {
 
     if ($env:GIT_DIR) {
-        return (resolve-path $env:GIT_DIR -ea silent)
+        return (resolve-path $env:GIT_DIR -ea SilentlyContinue)
     }
 
     $dir = resolve-path .
 
     while ($dir) {
-        if ($gd = join-path $dir '.git' | resolve-path -ea silent) {
+        if ($gd = join-path $dir '.git' | resolve-path -ea SilentlyContinue) {
             return $gd
         }
 
-        $dir = split-path $dir -parent | resolve-path -ea silent
+        $dir = split-path $dir -parent | resolve-path -ea SilentlyContinue
     }
 }
 
