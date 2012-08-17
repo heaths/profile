@@ -97,59 +97,6 @@ function Measure-Group
     }
 }
 
-# Pauses until user input
-function Read-Prompt
-{
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [string] $message,
-
-        [Parameter(Mandatory = $true, Position = 1)]
-        [scriptblock] $filter,
-
-        [Parameter()]
-        [consolecolor] $ForegroundColor = $Host.UI.RawUI.ForegroundColor,
-
-        [Parameter()]
-        [consolecolor] $BackgroundColor = $Host.UI.RawUI.BackgroundColor
-    )
-
-    # Skip if not running in the console host.
-    if ( -not $Host.UI.RawUI.ReadKey ) { return }
-
-    # Store the cursor position before displaying the prompt
-    $current = $Host.UI.RawUI.CursorPosition
-    write-host $message -nonewline -background $BackgroundColor -foreground $ForegroundColor
-
-    try
-    {
-        while ( $true )
-        {
-            $ch = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-            if ( $ch | &$filter ) { return $ch }
-        }
-    }
-    finally
-    {
-        # Clear the current line(s) and reset the cursor position
-        $space = new-object System.Management.Automation.Host.BufferCell
-        $space.Character = ' '
-        $space.ForegroundColor = $Host.UI.RawUI.ForegroundColor
-        $space.BackgroundColor = $Host.UI.RawUI.BackgroundColor
-
-        $line = new-object System.Management.Automation.Host.Rectangle
-        $line.Top = $current.Y;
-        $line.Bottom = $Host.UI.RawUI.CursorPosition.Y
-        $line.Left = $current.X;
-        $line.Right = $Host.UI.RawUI.BufferSize.Width
-
-        $Host.UI.RawUI.SetBufferContents($line, $space)
-        $Host.UI.RawUI.CursorPosition = $current
-    }
-}
-
 function Select-Unique
 {
     [CmdletBinding()]
@@ -225,7 +172,7 @@ filter page ( [int] $lines = $($Host.UI.RawUI.WindowSize.Height - 1) )
         $_
         if ( ++$i -eq $lines )
         {
-            $ch = read-prompt -fore 'Yellow' '<SPACE> next page; <CR> next line; [Q] quit' {
+            $ch = da817f7daa4f4b8db65c7e8add620143_rp -fore 'Yellow' '<SPACE> next page; <CR> next line; [Q] quit' {
                 process { 13,32 -contains $_.VirtualKeyCode -or $_.Character -ieq 'q' }
             }
             switch ( $ch )
@@ -252,7 +199,7 @@ filter pick
     # Display the object in the host using its default formatting
     $_ | out-default
 
-    $ch = read-prompt -fore 'Yellow' '[Y] send; [N] continue; [Q] quit' {
+    $ch = da817f7daa4f4b8db65c7e8add620143_rp -fore 'Yellow' '[Y] send; [N] continue; [Q] quit' {
         process { 'y','n','q' -icontains $_.Character }
     }
     if ( $ch.Character -ieq 'y' ) { $_ }
@@ -267,6 +214,58 @@ filter slow ( [int] $tempo = 100 )
 }
 
 # Private functions
+
+new-variable da817f7daa4f4b8db65c7e8add620143_rp -option Constant -visibility Private -scope Private -value {
+
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string] $message,
+
+        [Parameter(Mandatory = $true, Position = 1)]
+        [scriptblock] $filter,
+
+        [Parameter()]
+        [consolecolor] $ForegroundColor = $Host.UI.RawUI.ForegroundColor,
+
+        [Parameter()]
+        [consolecolor] $BackgroundColor = $Host.UI.RawUI.BackgroundColor
+    )
+
+    # Skip if not running in the console host.
+    if ( -not $Host.UI.RawUI.ReadKey ) { return }
+
+    # Store the cursor position before displaying the prompt
+    $current = $Host.UI.RawUI.CursorPosition
+    write-host $message -nonewline -background $BackgroundColor -foreground $ForegroundColor
+
+    try
+    {
+        while ( $true )
+        {
+            $ch = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+            if ( $ch | &$filter ) { return $ch }
+        }
+    }
+    finally
+    {
+        # Clear the current line(s) and reset the cursor position
+        $space = new-object System.Management.Automation.Host.BufferCell
+        $space.Character = ' '
+        $space.ForegroundColor = $Host.UI.RawUI.ForegroundColor
+        $space.BackgroundColor = $Host.UI.RawUI.BackgroundColor
+
+        $line = new-object System.Management.Automation.Host.Rectangle
+        $line.Top = $current.Y;
+        $line.Bottom = $Host.UI.RawUI.CursorPosition.Y
+        $line.Left = $current.X;
+        $line.Right = $Host.UI.RawUI.BufferSize.Width
+
+        $Host.UI.RawUI.SetBufferContents($line, $space)
+        $Host.UI.RawUI.CursorPosition = $current
+    }
+}
 
 new-variable da817f7daa4f4b8db65c7e8add620143_wp -option Constant -visibility Private -scope Private -value {
 
