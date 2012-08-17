@@ -20,7 +20,7 @@ function prompt
     }
 
     # Show current location in the prompt.
-    write-host $('PS ' + '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + $PWD)
+    write-host $('PS ' + $PWD)
 
     # Show current git branch in the prompt.
     if ($git = &$da817f7daa4f4b8db65c7e8add620143_gb) {
@@ -28,7 +28,7 @@ function prompt
     }
 
     # Show the nesting and default separators in the prompt.
-    '>' * $NestedPromptLevel + '> '
+    '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + '>' * $NestedPromptLevel + '> '
 }
 
 # Do not beep in the prompt by default.
