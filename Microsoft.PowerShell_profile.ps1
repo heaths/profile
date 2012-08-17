@@ -11,7 +11,7 @@ function prompt
 {
     # Beep K ("over") when a command finishes after the current $BeepPreference.
     if ($BeepPreference -gt 0 -and ($h = get-history -count 1) -and $h.ExecutionTime -gt $BeepPreference) {
-        $BeepTimer.Start()
+        $da817f7daa4f4b8db65c7e8add620143_bt.Start()
     }
 
     # Show if debugging in the prompt.
@@ -36,9 +36,9 @@ function prompt
 
 # Set up the BeepTimer for async beeps in prompt.
 new-object System.Timers.Timer -property @{AutoReset = $false; Interval = 1} `
-    | new-variable -name 'BeepTimer' -option Constant -visibility Private
-$null = register-objectevent -input $BeepTimer -event 'Elapsed' -supportevent -action {
-    300, 100, 300 | foreach { [Console]::Beep(800, $_); sleep -m 100 }
+    | new-variable da817f7daa4f4b8db65c7e8add620143_bt -option Constant -visibility Private
+$null = register-objectevent $da817f7daa4f4b8db65c7e8add620143_bt -event Elapsed -supportevent -action {
+    300, 100, 300 | foreach { [Console]::Beep(800, $_); start-sleep -m 100 }
 }
 
 # Increase history count.
