@@ -172,7 +172,7 @@ filter page ( [int] $lines = $($Host.UI.RawUI.WindowSize.Height - 1) )
         $_
         if ( ++$i -eq $lines )
         {
-            $ch = da817f7daa4f4b8db65c7e8add620143_rp -fore 'Yellow' '<SPACE> next page; <CR> next line; [Q] quit' {
+            $ch = &$da817f7daa4f4b8db65c7e8add620143_rp -fore 'Yellow' '<SPACE> next page; <CR> next line; [Q] quit' {
                 process { 13,32 -contains $_.VirtualKeyCode -or $_.Character -ieq 'q' }
             }
             switch ( $ch )
@@ -199,7 +199,7 @@ filter pick
     # Display the object in the host using its default formatting
     $_ | out-default
 
-    $ch = da817f7daa4f4b8db65c7e8add620143_rp -fore 'Yellow' '[Y] send; [N] continue; [Q] quit' {
+    $ch = &$da817f7daa4f4b8db65c7e8add620143_rp -fore 'Yellow' '[Y] send; [N] continue; [Q] quit' {
         process { 'y','n','q' -icontains $_.Character }
     }
     if ( $ch.Character -ieq 'y' ) { $_ }
