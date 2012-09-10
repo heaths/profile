@@ -1,9 +1,14 @@
 #Requires -Version 2.0
 
 # Add custom type and format data
-split-path $MyInvocation.MyCommand.Path | foreach-object {
-    $_ | join-path -child My.types.ps1xml -resolve -ea SilentlyContinue | update-typedata
-    $_ | join-path -child My.formats.ps1xml -resolve -ea SilentlyContinue | update-formatdata
+&{
+    $gx = {
+        param ([string] $Filter)
+        get-childitem $MyInvocation.MyCommand.Path -filter $Filter | sort-object Path | select-object -expand Path
+    }
+
+    &$gx '*.types.ps1xml' | update-typedata
+    &$gx '*.formats.ps1xml' | update-formatdata
 }
 
 # Change the defualt prompt.
@@ -288,7 +293,9 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
 
     if ($dir = &$da817f7daa4f4b8db65c7e8add620143_gr) {
 
-        $branch = join-path $dir 'HEAD' | resolve-path -ea SilentlyContinue | get-content
+        $branch = if (($path = join-path $dir 'HEAD') -and (test-path $path)) {
+            resolve-path $path | get-content
+        }
 
         if ($branch -match 'ref: refs/heads/(?<b>\w+)') {
             $branch = $Matches['b']
@@ -304,18 +311,20 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
 
 new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -value {
 
-    if ($env:GIT_DIR) {
-        return (resolve-path $env:GIT_DIR -ea SilentlyContinue)
+    if ($env:GIT_DIR -and (test-path $env:GIT_DIR)) {
+        return (resolve-path $env:GIT_DIR)
     }
 
     $dir = resolve-path .
 
     while ($dir) {
-        if ($gd = join-path $dir '.git' | resolve-path -ea SilentlyContinue) {
-            return $gd
+        if (($gd = join-path $dir '.git') -and (test-path $gd)) {
+            return (resolve-path $gd)
         }
 
-        $dir = split-path $dir -parent | resolve-path -ea SilentlyContinue
+        $dir = if (($parent = split-path $dir -parent) -and (test-path $parent)) {
+            resolve-path $parent
+        }
     }
 }
 
