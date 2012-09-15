@@ -4,8 +4,7 @@
         <View>
             <Name>Windows</Name>
             <ViewSelectedBy>
-                <TypeName>System.IO.DirectoryInfo</TypeName>
-                <TypeName>System.IO.FileInfo</TypeName>
+                <SelectionSetName>FileSystemTypes</SelectionSetName>
             </ViewSelectedBy>
             <GroupBy>
                 <PropertyName>PSParentPath</PropertyName>
@@ -56,8 +55,7 @@
         <View>
             <Name>Windows</Name>
             <ViewSelectedBy>
-                <TypeName>System.IO.DirectoryInfo</TypeName>
-                <TypeName>System.IO.FileInfo</TypeName>
+                <SelectionSetName>FileSystemTypes</SelectionSetName>
             </ViewSelectedBy>
             <GroupBy>
                 <PropertyName>PSParentPath</PropertyName>
