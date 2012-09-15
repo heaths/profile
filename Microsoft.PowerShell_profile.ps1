@@ -1,14 +1,9 @@
 #Requires -Version 2.0
 
 # Add custom type and format data
-&{
-    $gx = {
-        param ([string] $Filter)
-        get-childitem $MyInvocation.MyCommand.Path -filter $Filter | sort-object Path | select-object -expand Path
-    }
-
-    &$gx '*.types.ps1xml' | update-typedata
-    &$gx '*.formats.ps1xml' | update-formatdata
+split-path $MyInvocation.MyCommand.Path | foreach-object {
+    join-path $_ My.types.ps1xml | update-typedata
+    join-path $_ My.format.ps1xml | update-formatdata
 }
 
 # Change the defualt prompt.
