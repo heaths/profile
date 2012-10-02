@@ -44,6 +44,19 @@ $null = register-objectevent $da817f7daa4f4b8db65c7e8add620143_bt -event Elapsed
 # Increase history count.
 $MaximumHistoryCount = 100
 
+function Get-Cultures
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Position = 0)]
+        [System.Globalization.CultureTypes] $Type = 'AllCultures'
+    )
+
+    [System.Globalization.CultureInfo]::GetCultures($Type) `
+        | &$da817f7daa4f4b8db65c7e8add620143_at 'System.Globalization.CultureInfo#Developer'
+}
+
 function Measure-Group
 {
     [CmdletBinding()]
@@ -323,4 +336,27 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Pr
     }
 }
 
+new-variable da817f7daa4f4b8db65c7e8add620143_at -option Constant -visibility Private -value {
+
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string[]] $Type,
+
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        $InputObject
+    )
+
+    process
+    {
+        $InputObject | foreach-object {
+            for ( $i = 0; $i -lt $Type.length; ++$i ) {
+                $_.PSTypeNames.Insert($i, $Type[$i])
+            }
+
+            $_
+        }
+    }
+}
 # vim: set et sts=4 sw=4 ts=8:

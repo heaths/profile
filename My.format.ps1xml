@@ -112,6 +112,7 @@
             <Name>Developer</Name>
             <ViewSelectedBy>
                 <TypeName>System.Globalization.CultureInfo</TypeName>
+                <TypeName>System.Globalization.CultureInfo#Developer</TypeName>
             </ViewSelectedBy>
             <TableControl>
                 <TableHeaders>
