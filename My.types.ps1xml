@@ -65,6 +65,15 @@
             </ScriptProperty>
         </Members>
     </Type>
+    <Type>
+        <Name>Microsoft.Windows.Appx.PackageManager.Commands.AppxPackage</Name>
+        <Members>
+            <AliasProperty>
+                <Name>PSPath</Name>
+                <ReferencedMemberName>InstallLocation</ReferencedMemberName>
+            </AliasProperty>
+        </Members>
+    </Type>
 </Types>
 
 <!-- vim: set fenc=utf-8 et sts=4 sw=4 ts=8: -->
