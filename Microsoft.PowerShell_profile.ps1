@@ -22,9 +22,9 @@ function prompt
     # Show current location in the prompt.
     write-host $('PS ' + $PWD)
 
-    # Show current git branch in the prompt.
-    if ($git = &$da817f7daa4f4b8db65c7e8add620143_gb) {
-        &$da817f7daa4f4b8db65c7e8add620143_wp $git.Branch Cyan
+    # Show current repo branch in the prompt.
+    if ($repo = &$da817f7daa4f4b8db65c7e8add620143_gb) {
+        &$da817f7daa4f4b8db65c7e8add620143_wp $repo.Branch Cyan
     }
 
     # Show the nesting and default separators in the prompt.
@@ -301,19 +301,35 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
 
     if ($dir = &$da817f7daa4f4b8db65c7e8add620143_gr) {
 
-        $branch = if (($path = join-path $dir 'HEAD') -and (test-path $path)) {
-            resolve-path $path | get-content
+        $repo = new-object PSObject -property @{ 'Branch' = ''; 'SCM' = $dir.SCM }
+
+        switch ($dir.SCM) {
+            'Git' {
+                $branch = if (($path = join-path $dir 'HEAD') -and (test-path $path)) {
+                    resolve-path $path | get-content
+                }
+
+                if ($branch -match 'ref: refs/heads/(?<b>\w+)') {
+                    $branch = $Matches['b']
+
+                } elseif ($branch.length -ge 7) {
+                    $branch = 'hash: ' + $branch.Substring(0, 7)
+
+                }
+
+                $repo.Branch = $branch
+            }
+
+            'Hg' {
+                $branch = if (($path = join-path $dir 'branch') -and (test-path $path)) {
+                    resolve-path $path | get-content
+                }
+
+                $repo.Branch = $branch
+            }
         }
 
-        if ($branch -match 'ref: refs/heads/(?<b>\w+)') {
-            $branch = $Matches['b']
-
-        } elseif ($branch.length -ge 7) {
-            $branch = 'hash: ' + $branch.Substring(0, 7)
-
-        }
-
-        new-object PSObject -property @{ 'Branch' = $branch }
+        $repo
     }
 }
 
@@ -327,7 +343,10 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Pr
 
     while ($dir) {
         if (($gd = join-path $dir '.git') -and (test-path $gd)) {
-            return (resolve-path $gd)
+            return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
+
+        } elseif (($gd = join-path $dir '.hg') -and (test-path $gd)) {
+            return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Hg' -passthru)
         }
 
         $dir = if (($parent = split-path $dir -parent) -and (test-path $parent)) {
