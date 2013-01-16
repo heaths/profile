@@ -23,7 +23,7 @@ function prompt
     write-host $('PS ' + $PWD)
 
     # Show current repo branch in the prompt.
-    if ($repo = &$da817f7daa4f4b8db65c7e8add620143_gb) {
+    if ($repo = &$da817f7daa4f4b8db65c7e8add620143_gb -and $repo.Branch) {
         &$da817f7daa4f4b8db65c7e8add620143_wp $repo.Branch Cyan
     }
 
@@ -301,7 +301,7 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
 
     if ($dir = &$da817f7daa4f4b8db65c7e8add620143_gr) {
 
-        $repo = new-object PSObject -property @{ 'Branch' = ''; 'SCM' = $dir.SCM }
+        $repo = new-object PSObject -property @{ 'Branch' = $null; 'SCM' = $dir.SCM }
 
         switch ($dir.SCM) {
             'Git' {
@@ -335,17 +335,27 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
 
 new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -value {
 
-    if ($env:GIT_DIR -and (test-path $env:GIT_DIR)) {
-        return (resolve-path $env:GIT_DIR)
+    if ($env:GIT_DIR -and (test-path $env:GIT_DIR -pathtype 'container')) {
+        return (resolve-path $env:GIT_DIR | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
     }
 
     $dir = resolve-path .
 
     while ($dir) {
-        if (($gd = join-path $dir '.git') -and (test-path $gd)) {
+        if (($gd = join-path $dir '.git') -and (test-path $gd -pathtype 'container')) {
+            # check if git repository
             return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
 
+        } elseif (test-path $gd -pathtype 'leaf') {
+            # check if git submodule
+            if ((resolve-path $gd | get-content) -match 'gitdir: (?<d>.+)') {
+                if (($gd = join-path $dir $Matches['d']) -and (test-path $gd -pathtype 'container')) {
+                    return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
+                }
+            }
+
         } elseif (($gd = join-path $dir '.hg') -and (test-path $gd)) {
+            # check if hg repository
             return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Hg' -passthru)
         }
 
