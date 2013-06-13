@@ -2,8 +2,8 @@
 
 # Add custom type and format data
 split-path $MyInvocation.MyCommand.Path | foreach-object {
-    join-path $_ My.types.ps1xml | update-typedata
-    join-path $_ My.format.ps1xml | update-formatdata
+    if (($path = join-path $_ My.types.ps1xml) -and (test-path $path)) { $path | update-typedata }
+    if (($path = join-path $_ My.format.ps1xml) -and (test-path $path)) { $path | update-formatdata }
 }
 
 # Change the defualt prompt.
@@ -16,7 +16,7 @@ function prompt
 
     # Show if debugging in the prompt.
     if ($PSDebugContext) {
-        &$da817f7daa4f4b8db65c7e8add620143_wp 'DBG' Red
+        &$da817f7daa4f4b8db65c7e8add620143_wp 'DBG' 'Red'
     }
 
     # Show current location in the prompt.
@@ -24,7 +24,7 @@ function prompt
 
     # Show current repo branch in the prompt.
     if ($repo = &$da817f7daa4f4b8db65c7e8add620143_gb -and $repo.Branch) {
-        &$da817f7daa4f4b8db65c7e8add620143_wp $repo.Branch Cyan
+        &$da817f7daa4f4b8db65c7e8add620143_wp $repo.Branch 'Cyan'
     }
 
     # Show the nesting and default separators in the prompt.
@@ -292,9 +292,9 @@ new-variable da817f7daa4f4b8db65c7e8add620143_wp -option Constant -visibility Pr
         [ConsoleColor] $Foreground
     )
 
-    write-host '[' -foreground Yellow -nonewline
+    write-host '[' -foreground 'Yellow' -nonewline
     write-host $Token -foreground $Foreground -nonewline
-    write-host '] ' -foreground Yellow -nonewline
+    write-host '] ' -foreground 'Yellow' -nonewline
 }
 
 new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Private -value {
@@ -335,21 +335,21 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
 
 new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -value {
 
-    if ($env:GIT_DIR -and (test-path $env:GIT_DIR -pathtype 'container')) {
+    if ((test-path env:GIT_DIR) -and (test-path $env:GIT_DIR -pathtype 'Container')) {
         return (resolve-path $env:GIT_DIR | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
     }
 
     $dir = resolve-path .
 
     while ($dir) {
-        if (($gd = join-path $dir '.git') -and (test-path $gd -pathtype 'container')) {
+        if (($gd = join-path $dir '.git') -and (test-path $gd -pathtype 'Container')) {
             # check if git repository
             return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
 
-        } elseif (test-path $gd -pathtype 'leaf') {
+        } elseif (test-path $gd -pathtype 'Leaf') {
             # check if git submodule
             if ((resolve-path $gd | get-content) -match 'gitdir: (?<d>.+)') {
-                if (($gd = join-path $dir $Matches['d']) -and (test-path $gd -pathtype 'container')) {
+                if (($gd = join-path $dir $Matches['d']) -and (test-path $gd -pathtype 'Container')) {
                     return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
                 }
             }
