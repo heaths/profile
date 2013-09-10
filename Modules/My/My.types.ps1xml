@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Types>
+    <Type>
+        <Name>System.Globalization.CultureInfo</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>LCIDHex</Name>
+                <GetScriptBlock>
+                    "0x{0:X}" -f $this.LCID
+                </GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+</Types>
+
+<!-- vim: set fenc=utf-8 et sts=4 sw=4 ts=8: -->

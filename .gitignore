@@ -1,1 +1,2 @@
-Modules/
+Modules/*
+!Modules/My
