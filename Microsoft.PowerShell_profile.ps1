@@ -31,6 +31,35 @@ function prompt
     '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + '>' * $NestedPromptLevel + '> '
 }
 
+# Hook command lookup.
+$ExecutionContext.InvokeCommand.CommandNotFoundAction = {
+
+    $EventArgs = $Args[1]
+    $Extensions = @('.bat', '.cmd')
+
+    # Look for local Node.js module commands.
+    &$da817f7daa4f4b8db65c7e8add620143_sp {
+        if (($gd = join-path $dir 'node_modules\.bin') -and (test-path $gd -pathtype Container)) {
+            if ($cmd = $Extensions | &$da817f7daa4f4b8db65c7e8add620143_gcm $gd $EventArgs.CommandName) {
+                $EventArgs.Command = $cmd
+                $EventArgs.StopSearch = $true
+            }
+        }
+    }
+
+    if ($EventArgs.StopSearch) {
+        return
+    }
+
+    # Look for global Node.js module commands.
+    if (($gd = join-path $env:AppData 'npm\node_modules\bin') -and (test-path $gd -pathtype Container)) {
+        if ($out = $Extensions | &$da817f7daa4f4b8db65c7e8add620143_gcm $gd $EventArgs.CommandName) {
+            $EventArgs.Command = $cmd
+            $EventArgs.StopSearch = $true
+        }
+    }
+}
+
 # Do not beep in the prompt by default.
 [timespan] $BeepPreference = 0
 
@@ -99,15 +128,36 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
     }
 }
 
+new-variable da817f7daa4f4b8db65c7e8add620143_gcm -option Constant -visibility Private -value {
+
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory=$true, Position=0)]
+        $Directory,
+
+        [Parameter(Mandatory=$true, Position=1)]
+        [string] $Command,
+
+        [Parameter(ValueFromPipeline=$true)]
+        [string] $Extension
+    )
+
+    process {
+        if (($cmd = join-path $Directory ($Command + $Extension)) -and (test-path $cmd)) {
+            return $ExecutionContext.InvokeCommand.GetCommand($cmd, 'Application')
+        }
+    }
+}
+
 new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -value {
 
     if ((test-path env:GIT_DIR) -and (test-path $env:GIT_DIR -pathtype 'Container')) {
         return (resolve-path $env:GIT_DIR | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
     }
 
-    $dir = resolve-path .
+    &$da817f7daa4f4b8db65c7e8add620143_sp {
 
-    while ($dir) {
         if (($gd = join-path $dir '.git') -and (test-path $gd -pathtype 'Container')) {
             # check if git repository
             return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
@@ -123,6 +173,26 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Pr
         } elseif (($gd = join-path $dir '.hg') -and (test-path $gd)) {
             # check if hg repository
             return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Hg' -passthru)
+        }
+    }
+}
+
+new-variable da817f7daa4f4b8db65c7e8add620143_sp -option Constant -visibility Private -value {
+
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory=$true, Position=0)]
+        [scriptblock] $Filter
+    )
+
+    $dir = resolve-path .
+
+    while ($dir) {
+
+        # pass the path to the filter script
+        if ($out = &$Filter $dir) {
+            return $out
         }
 
         $dir = if (($parent = split-path $dir -parent) -and (test-path $parent)) {
