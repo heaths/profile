@@ -32,30 +32,33 @@ function prompt
 }
 
 # Hook command lookup.
-$ExecutionContext.InvokeCommand.CommandNotFoundAction = {
+if ($PSVersionTable.PSVersion -ge "3.0")
+{
+    $ExecutionContext.InvokeCommand.CommandNotFoundAction = {
 
-    $EventArgs = $Args[1]
-    $Extensions = @('.bat', '.cmd')
+        $EventArgs = $Args[1]
+        $Extensions = @('.bat', '.cmd')
 
-    # Look for local Node.js module commands.
-    &$da817f7daa4f4b8db65c7e8add620143_sp {
-        if (($gd = join-path $dir 'node_modules\.bin') -and (test-path $gd -pathtype Container)) {
-            if ($cmd = $Extensions | &$da817f7daa4f4b8db65c7e8add620143_gcm $gd $EventArgs.CommandName) {
+        # Look for local Node.js module commands.
+        &$da817f7daa4f4b8db65c7e8add620143_sp {
+            if (($gd = join-path $dir 'node_modules\.bin') -and (test-path $gd -pathtype Container)) {
+                if ($cmd = $Extensions | &$da817f7daa4f4b8db65c7e8add620143_gcm $gd $EventArgs.CommandName) {
+                    $EventArgs.Command = $cmd
+                    $EventArgs.StopSearch = $true
+                }
+            }
+        }
+
+        if ($EventArgs.StopSearch) {
+            return
+        }
+
+        # Look for global Node.js module commands.
+        if (($gd = join-path $env:AppData 'npm\node_modules\bin') -and (test-path $gd -pathtype Container)) {
+            if ($out = $Extensions | &$da817f7daa4f4b8db65c7e8add620143_gcm $gd $EventArgs.CommandName) {
                 $EventArgs.Command = $cmd
                 $EventArgs.StopSearch = $true
             }
-        }
-    }
-
-    if ($EventArgs.StopSearch) {
-        return
-    }
-
-    # Look for global Node.js module commands.
-    if (($gd = join-path $env:AppData 'npm\node_modules\bin') -and (test-path $gd -pathtype Container)) {
-        if ($out = $Extensions | &$da817f7daa4f4b8db65c7e8add620143_gcm $gd $EventArgs.CommandName) {
-            $EventArgs.Command = $cmd
-            $EventArgs.StopSearch = $true
         }
     }
 }
