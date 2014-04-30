@@ -13,6 +13,55 @@ function Get-Cultures
         | script:add-type 'System.Globalization.CultureInfo#Developer'
 }
 
+function Join-Object
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string] $KeyName,
+
+        [Parameter(Position=1)]
+        [string] $PropertyName = "Property",
+
+        [Parameter(Position=2)]
+        [string] $ValueName = "Value",
+
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        $InputObject
+    )
+
+    begin
+    {
+        $OutputObject = @{$KeyName = $null}
+    }
+
+    process
+    {
+        if ($InputObject.$KeyName -ne $OutputObject.$KeyName)
+        {
+            if ($OutputObject.$KeyName)
+            {
+                New-Object PSObject -Property $OutputObject
+            }
+
+            $OutputObject = @{$KeyName = $_.$KeyName; $_.$PropertyName = $_.$ValueName}
+        }
+        else
+        {
+            $OutputObject[$_.$PropertyName] = $_.$ValueName
+        }
+    }
+
+    end
+    {
+        if ($OutputObject.$KeyName)
+        {
+            New-Object PSObject -Property $OutputObject
+        }
+    }
+}
+
 function Measure-Group
 {
     [CmdletBinding()]
