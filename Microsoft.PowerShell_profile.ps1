@@ -75,7 +75,7 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
                     resolve-path $path | get-content
                 }
 
-                if ($branch -match 'ref: refs/heads/(?<b>[\w_\-/]+)') {
+                if ($branch -match 'ref: refs/heads/(?<b>[\w_\.\-/]+)') {
                     $branch = $Matches['b']
 
                 } elseif ($branch.length -ge 7) {
