@@ -7,6 +7,5 @@ PowerShellVersion = '2.0'
 ModuleToProcess = 'My.psm1'
 TypesToProcess = 'My.types.ps1xml'
 FormatsToProcess = 'My.format.ps1xml'
-FunctionsToExport = 'Get-Cultures', 'Join-Object', 'Measure-Group', 'Select-Unique', 'page', 'pick', 'slow'
 }
 

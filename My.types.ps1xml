@@ -21,6 +21,24 @@
                     $null
                 </GetScriptBlock>
             </ScriptProperty>
+            <ScriptProperty>
+                <Name>MD5</Name>
+                <GetScriptBlock>
+                    $null
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>SHA1</Name>
+                <GetScriptBlock>
+                    $null
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>SHA256</Name>
+                <GetScriptBlock>
+                    $null
+                </GetScriptBlock>
+            </ScriptProperty>
         </Members>
     </Type>
     <Type>
@@ -39,6 +57,27 @@
                         { $_ -gt 1000 } { "{0,6:0.##} KB" -f ( $_ / 1kb ); break }
                         default { "{0,6:0} B" -f $_; break }
                     }
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>MD5</Name>
+                <GetScriptBlock>
+                    if (!(get-command get-filehash)) { import-module My }
+                    (get-filehash -literalPath $this.FullName -algorithm 'MD5').Hash
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>SHA1</Name>
+                <GetScriptBlock>
+                    if (!(get-command get-filehash)) { import-module My }
+                    (get-filehash -literalPath $this.FullName -algorithm 'SHA1').Hash
+                </GetScriptBlock>
+            </ScriptProperty>
+            <ScriptProperty>
+                <Name>SHA256</Name>
+                <GetScriptBlock>
+                    if (!(get-command get-filehash)) { import-module My }
+                    (get-filehash -literalPath $this.FullName -algorithm 'SHA256').Hash
                 </GetScriptBlock>
             </ScriptProperty>
         </Members>

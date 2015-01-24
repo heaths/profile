@@ -12,6 +12,102 @@ function Get-Cultures
     [System.Globalization.CultureInfo]::GetCultures($Type) `
         | script:add-type 'System.Globalization.CultureInfo#Developer'
 }
+export-modulemember -function 'Get-Cultures'
+
+if ($PSVersionTable.PSVersion -lt '4.0')
+{
+# Version-compatible copy for dowwnlevel platforms
+function Get-FileHash
+{
+    [CmdletBinding(DefaultParameterSetName = 'Path')]
+    param(
+        [Parameter(ParameterSetName = 'Path', Mandatory = $true, Position = 0)]
+        [Parameter(ParameterSetName = 'Stream')]
+        [string[]] $Path,
+
+        [Parameter(ParameterSetName = 'LiteralPath', Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [Alias('PSPath')]
+        [string[]] $LiteralPath,
+
+        [Parameter(ParameterSetName = 'Stream', Mandatory = $true)]
+        [System.IO.Stream] $InputStream,
+
+        [ValidateSet('SHA1', 'SHA256', 'SHA384', 'SHA512', 'MACTripleDES', 'MD5', 'RIPEMD160')]
+        [string] $Algorithm = 'SHA256'
+    )
+
+    begin
+    {
+        [System.Security.Cryptography.HashAlgorithm] $hasher = $null
+    }
+
+    process
+    {
+        if ($PSCmdlet.ParameterSetName -eq 'Stream')
+        {
+            if (!$hasher)
+            {
+                $hasher = [System.Security.Cryptography.HashAlgorithm]::Create($Algorithm)
+            }
+
+            $buffer = $hasher.ComputeHash($InputStream)
+            $hash = [BitConverter]::ToString($buffer) -replace '-', ''
+
+            $returnObj = new-object PSCustomObject -property @{
+                Algorithm = $Algorithm;
+                Hash = $hash.ToUpperInvariant();
+                Path = if ($Path) { $Path } else { $null };
+            }
+
+            # Use the same type name as PowerShell v4 and newer
+            $returnObj.PSObject.TypeNames.Insert(0, "Microsoft.Powershell.Utility.FileHash")
+
+            $returnObj
+        }
+        else
+        {
+            $providerPaths = @()
+            if ($PSCmdlet.ParameterSetName -eq "LiteralPath")
+            {
+                $providerPaths += resolve-path -literalPath $LiteralPath | select-object -expand ProviderPath
+            }
+            elseif ($PSCmdlet.ParameterSetName -eq 'Path')
+            {
+                $providerPaths += resolve-path -path $Path | select-object -expand ProviderPath
+            }
+
+            foreach ($providerPath in $providerPaths)
+            {
+                if (test-path -literalPath $providerPath -pathType Container)
+                {
+                    continue
+                }
+
+                try
+                {
+                    $InputStream = [System.IO.File]::OpenRead($providerPath)
+                    get-filehash -inputStream $InputStream -path $providerPath -algorithm $Algorithm
+                }
+                catch [Exception]
+                {
+                    $message = "The file '{0}' cannot be read: {1}" -f $providerPath, $_
+                    write-error -message $message -category ReadError -errorId 'FileReadError' -targetObject $providerPath
+                    return
+                }
+                finally
+                {
+                    if ($InputStream)
+                    {
+                        $InputStream.Close()
+                    }
+                }
+            }
+        }
+    }
+}
+
+export-modulemember -function 'Get-FileHash'
+}
 
 function Join-Object
 {
@@ -61,6 +157,7 @@ function Join-Object
         }
     }
 }
+export-modulemember -function 'Join-Object'
 
 function Measure-Group
 {
@@ -116,6 +213,7 @@ function Measure-Group
         }} | select-object $ExpandedProperties
     }
 }
+export-modulemember -function 'Measure-Group'
 
 function Select-Unique
 {
@@ -182,6 +280,7 @@ function Select-Unique
         }
     }
 }
+export-modulemember 'Select-Unique'
 
 # Page output one screen at a time
 filter page ( [int] $lines = $($Host.UI.RawUI.WindowSize.Height - 1) )
@@ -212,6 +311,7 @@ filter page ( [int] $lines = $($Host.UI.RawUI.WindowSize.Height - 1) )
         }
     }
 }
+export-modulemember -function 'page'
 
 # Select which objects to send through the pipeline
 filter pick
@@ -225,6 +325,7 @@ filter pick
     if ( $ch.Character -ieq 'y' ) { $_ }
     elseif ( $ch.Character -ieq 'q' ) { break }
 }
+export-modulemember -function 'pick'
 
 # Sleep between objects in the pipeline
 filter slow ( [int] $tempo = 100 )
@@ -232,6 +333,7 @@ filter slow ( [int] $tempo = 100 )
     $_
     start-sleep -milliseconds $tempo
 }
+export-modulemember -function 'slow'
 
 
 # Private functions
