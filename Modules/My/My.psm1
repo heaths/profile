@@ -215,6 +215,55 @@ function Measure-Group
 }
 export-modulemember -function 'Measure-Group'
 
+function Select-RegexGroups
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [Microsoft.PowerShell.Commands.MatchInfo[]] $Match
+    )
+
+    begin
+    {
+        $Cache = @{}
+    }
+
+    process
+    {
+        foreach ($m in $Match)
+        {
+            if (-not $Cache.Contains($m.Pattern))
+            {
+                $re = new-object System.Text.RegularExpressions.Regex $m.Pattern
+                $indexes = $re.GetGroupNumbers()
+                $names = $re.GetGroupNames() | where-object { $indexes -notcontains $_ }
+
+                $Cache.Add($m.Pattern, $names)
+            }
+            else
+            {
+                $names = $Cache[$m.Pattern]
+            }
+
+            if ($names)
+            {
+                foreach ($sub in $m.Matches)
+                {
+                    $groups = @{}
+                    foreach ($name in $names)
+                    {
+                        $groups.$name = $sub.Groups[$name].Value
+                    }
+
+                    new-object PSObject -property $groups
+                }
+            }
+        }
+    }
+}
+export-modulemember -function 'Select-RegexGroups'
+
 function Select-Unique
 {
     [CmdletBinding()]
