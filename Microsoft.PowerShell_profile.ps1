@@ -114,7 +114,8 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Pr
         } elseif (test-path $gd -pathtype 'Leaf') {
             # check if git submodule
             if ((resolve-path $gd | get-content) -match 'gitdir: (?<d>.+)') {
-                if (($gd = join-path $dir $Matches['d']) -and (test-path $gd -pathtype 'Container')) {
+                # join-path simply concatenates both paths so use path.combine if gitdir is absolute
+                if (($gd = [io.path]::combine($dir, $Matches['d'])) -and (test-path $gd -pathtype 'Container')) {
                     return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
                 }
             }
