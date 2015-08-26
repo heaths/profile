@@ -99,28 +99,6 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
     }
 }
 
-new-variable da817f7daa4f4b8db65c7e8add620143_gcm -option Constant -visibility Private -value {
-
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory=$true, Position=0)]
-        $Directory,
-
-        [Parameter(Mandatory=$true, Position=1)]
-        [string] $Command,
-
-        [Parameter(ValueFromPipeline=$true)]
-        [string] $Extension
-    )
-
-    process {
-        if (($cmd = join-path $Directory ($Command + $Extension)) -and (test-path $cmd)) {
-            return $ExecutionContext.InvokeCommand.GetCommand($cmd, 'Application')
-        }
-    }
-}
-
 new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -value {
 
     if ((test-path env:GIT_DIR) -and (test-path $env:GIT_DIR -pathtype 'Container')) {
