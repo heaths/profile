@@ -329,7 +329,27 @@ function Select-Unique
         }
     }
 }
-export-modulemember 'Select-Unique'
+export-modulemember -function 'Select-Unique'
+
+function Test-Elevated
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter()]
+        [switch] $Impersonating
+    )
+
+    $id = [System.Security.Principal.WindowsIdentity]::GetCurrent($Impersonating)
+    if (!$id)
+    {
+        return $false
+    }
+
+    $p = new-object System.Security.Principal.WindowsPrincipal $id
+    $p.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+export-modulemember -function 'Test-Elevated'
 
 # Page output one screen at a time
 filter page ( [int] $lines = $($Host.UI.RawUI.WindowSize.Height - 1) )
