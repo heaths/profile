@@ -7,7 +7,7 @@ split-path $MyInvocation.MyCommand.Path | foreach-object {
 }
 
 # Change the defualt prompt.
-function prompt
+function global:prompt
 {
     # Beep K ("over") when a command finishes after the current $BeepPreference.
     if ($BeepPreference -gt 0 -and ($h = get-history -count 1) -and $h.ExecutionTime -gt $BeepPreference) {
