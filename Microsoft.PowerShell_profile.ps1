@@ -32,7 +32,7 @@ function global:prompt
 }
 
 # Do not beep in the prompt by default.
-[timespan] $BeepPreference = 0
+[timespan] $global:BeepPreference = 0
 
 # Set up the BeepTimer for async beeps in prompt.
 if (-not (test-path variable:\Profile_BeepTimer)) {
@@ -44,7 +44,7 @@ $null = register-objectevent $Profile_BeepTimer -event Elapsed -supportevent -ac
 }
 
 # Increase history count.
-$MaximumHistoryCount = 100
+$global:MaximumHistoryCount = 100
 
 # Private functions
 
