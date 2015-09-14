@@ -36,7 +36,7 @@ function prompt
 
 # Set up the BeepTimer for async beeps in prompt.
 new-object System.Timers.Timer -property @{AutoReset = $false; Interval = 1} `
-    | new-variable da817f7daa4f4b8db65c7e8add620143_bt -option Constant -visibility Private
+    | new-variable da817f7daa4f4b8db65c7e8add620143_bt -option Constant -visibility Private -ea SilentlyContinue
 $null = register-objectevent $da817f7daa4f4b8db65c7e8add620143_bt -event Elapsed -supportevent -action {
     300, 100, 300 | foreach { [Console]::Beep(800, $_); start-sleep -m 100 }
 }
@@ -46,7 +46,7 @@ $MaximumHistoryCount = 100
 
 # Private functions
 
-new-variable da817f7daa4f4b8db65c7e8add620143_wp -option Constant -visibility Private -scope Private -value {
+new-variable da817f7daa4f4b8db65c7e8add620143_wp -option Constant -visibility Private -ea SilentlyContinue -scope Private -value {
 
     [CmdletBinding()]
     param
@@ -63,7 +63,7 @@ new-variable da817f7daa4f4b8db65c7e8add620143_wp -option Constant -visibility Pr
     write-host '] ' -foreground 'Yellow' -nonewline
 }
 
-new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Private -value {
+new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Private -ea SilentlyContinue -value {
 
     if ($dir = &$da817f7daa4f4b8db65c7e8add620143_gr) {
 
@@ -99,7 +99,7 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
     }
 }
 
-new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -value {
+new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -ea SilentlyContinue -value {
 
     if ((test-path env:GIT_DIR) -and (test-path $env:GIT_DIR -pathtype 'Container')) {
         return (resolve-path $env:GIT_DIR | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
@@ -127,7 +127,7 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Pr
     }
 }
 
-new-variable da817f7daa4f4b8db65c7e8add620143_sp -option Constant -visibility Private -value {
+new-variable da817f7daa4f4b8db65c7e8add620143_sp -option Constant -visibility Private -ea SilentlyContinue -value {
 
     [CmdletBinding()]
     param
