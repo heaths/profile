@@ -11,20 +11,20 @@ function global:prompt
 {
     # Beep K ("over") when a command finishes after the current $BeepPreference.
     if ($BeepPreference -gt 0 -and ($h = get-history -count 1) -and $h.ExecutionTime -gt $BeepPreference) {
-        $da817f7daa4f4b8db65c7e8add620143_bt.Start()
+        $Profile_BeepTimer.Start()
     }
 
     # Show if debugging in the prompt.
     if ($PSDebugContext) {
-        &$da817f7daa4f4b8db65c7e8add620143_wp 'DBG' 'Red'
+        &$Profile_WritePrompt 'DBG' 'Red'
     }
 
     # Show current location in the prompt.
     write-host $('PS ' + $PWD)
 
     # Show current repo branch in the prompt.
-    if ($repo = &$da817f7daa4f4b8db65c7e8add620143_gb -and $repo.Branch) {
-        &$da817f7daa4f4b8db65c7e8add620143_wp $repo.Branch 'Cyan'
+    if ($repo = &$Profile_GetBranch -and $repo.Branch) {
+        &$Profile_WritePrompt $repo.Branch 'Cyan'
     }
 
     # Show the nesting and default separators in the prompt.
@@ -35,10 +35,12 @@ function global:prompt
 [timespan] $BeepPreference = 0
 
 # Set up the BeepTimer for async beeps in prompt.
+if (-not (test-path variable:\Profile_BeepTimer)) {
 new-object System.Timers.Timer -property @{AutoReset = $false; Interval = 1} `
-    | new-variable da817f7daa4f4b8db65c7e8add620143_bt -option Constant -visibility Private -ea SilentlyContinue
-$null = register-objectevent $da817f7daa4f4b8db65c7e8add620143_bt -event Elapsed -supportevent -action {
+    | new-variable Profile_BeepTimer -option Constant -visibility Private
+$null = register-objectevent $Profile_BeepTimer -event Elapsed -supportevent -action {
     300, 100, 300 | foreach { [Console]::Beep(800, $_); start-sleep -m 100 }
+}
 }
 
 # Increase history count.
@@ -46,7 +48,8 @@ $MaximumHistoryCount = 100
 
 # Private functions
 
-new-variable da817f7daa4f4b8db65c7e8add620143_wp -option Constant -visibility Private -ea SilentlyContinue -scope Private -value {
+if (-not (test-path variable:\Profile_WritePrompt)) {
+new-variable Profile_WritePrompt -option Constant -visibility Private -scope Private -value {
 
     [CmdletBinding()]
     param
@@ -62,10 +65,12 @@ new-variable da817f7daa4f4b8db65c7e8add620143_wp -option Constant -visibility Pr
     write-host $Token -foreground $Foreground -nonewline
     write-host '] ' -foreground 'Yellow' -nonewline
 }
+}
 
-new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Private -ea SilentlyContinue -value {
+if (-not (test-path variable:\Profile_GetBranch)) {
+new-variable Profile_GetBranch -option Constant -visibility Private -value {
 
-    if ($dir = &$da817f7daa4f4b8db65c7e8add620143_gr) {
+    if ($dir = &$Profile_GetRepo) {
 
         $repo = new-object PSObject -property @{ 'Branch' = $null; 'SCM' = $dir.SCM }
 
@@ -98,14 +103,16 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gb -option Constant -visibility Pr
         $repo
     }
 }
+}
 
-new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Private -ea SilentlyContinue -value {
+if (-not (test-path variable:\Profile_GetRepo)) {
+new-variable Profile_GetRepo -option Constant -visibility Private -value {
 
     if ((test-path env:GIT_DIR) -and (test-path $env:GIT_DIR -pathtype 'Container')) {
         return (resolve-path $env:GIT_DIR | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
     }
 
-    &$da817f7daa4f4b8db65c7e8add620143_sp {
+    &$Profile_SearchParent {
 
         if (($gd = join-path $dir '.git') -and (test-path $gd -pathtype 'Container')) {
             # check if git repository
@@ -126,8 +133,10 @@ new-variable da817f7daa4f4b8db65c7e8add620143_gr -option Constant -visibility Pr
         }
     }
 }
+}
 
-new-variable da817f7daa4f4b8db65c7e8add620143_sp -option Constant -visibility Private -ea SilentlyContinue -value {
+if (-not (test-path variable:\Profile_SearchParent)) {
+new-variable Profile_SearchParent -option Constant -visibility Private -value {
 
     [CmdletBinding()]
     param
@@ -149,6 +158,7 @@ new-variable da817f7daa4f4b8db65c7e8add620143_sp -option Constant -visibility Pr
             resolve-path $parent
         }
     }
+}
 }
 
 # vim: set et sts=4 sw=4 ts=8:
