@@ -6,6 +6,11 @@ split-path $MyInvocation.MyCommand.Path | foreach-object {
     if (($path = join-path $_ My.format.ps1xml) -and (test-path $path)) { $path | update-formatdata }
 }
 
+# Set up drive roots for convenience
+if (test-path ~\Source\Repos) {
+    $null = new-psdrive -name Repos -psprovider FileSystem -root ~\Source\Repos
+}
+
 # Change the defualt prompt.
 function global:prompt
 {
