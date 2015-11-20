@@ -7,7 +7,7 @@ split-path $MyInvocation.MyCommand.Path | foreach-object {
 }
 
 # Set up drive roots for convenience
-if (test-path ~\Source\Repos) {
+if ((test-path ~\Source\Repos) -and -not (test-path Repos:\)) {
     $null = new-psdrive -name Repos -psprovider FileSystem -root ~\Source\Repos
 }
 
