@@ -16,11 +16,6 @@ if ((test-path ~\Source\Repos) -and -not (test-path Repos:\)) {
 # Change the defualt prompt.
 function global:prompt
 {
-    # Beep K ("over") when a command finishes after the current $BeepPreference.
-    if ($BeepPreference -gt 0 -and ($h = get-history -count 1) -and $h.ExecutionTime -gt $BeepPreference) {
-        $Profile_BeepTimer.Start()
-    }
-
     # Show if debugging in the prompt.
     if ($PSDebugContext) {
         &$Profile_WritePrompt 'DBG' 'Red'
@@ -36,18 +31,6 @@ function global:prompt
 
     # Show the nesting and default separators in the prompt.
     '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + '>' * $NestedPromptLevel + '> '
-}
-
-# Do not beep in the prompt by default.
-[timespan] $global:BeepPreference = 0
-
-# Set up the BeepTimer for async beeps in prompt.
-if (-not (test-path variable:\Profile_BeepTimer)) {
-new-object System.Timers.Timer -property @{AutoReset = $false; Interval = 1} `
-    | new-variable Profile_BeepTimer -option Constant -visibility Private
-$null = register-objectevent $Profile_BeepTimer -event Elapsed -supportevent -action {
-    300, 100, 300 | foreach { [Console]::Beep(800, $_); start-sleep -m 100 }
-}
 }
 
 # Increase history count.
