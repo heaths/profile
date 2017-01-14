@@ -1,10 +1,12 @@
 #Requires -Version 2.0
 
+#region Comment
 # Add custom type and format data
 split-path $MyInvocation.MyCommand.Path | foreach-object {
     if (($path = join-path $_ My.types.ps1xml) -and (test-path $path)) { $path | update-typedata }
     if (($path = join-path $_ My.format.ps1xml) -and (test-path $path)) { $path | update-formatdata }
 }
+#endregion
 
 # Set up drive roots for convenience
 if ((test-path ~\Source\Repos) -and -not (test-path Repos:\)) {
@@ -29,7 +31,7 @@ function global:prompt
 
     # Show current repo branch in the prompt.
     if ($repo = &$Profile_GetBranch -and $repo.Branch) {
-        &$Profile_WritePrompt $repo.Branch 'Cyan'
+        &$Profile_WritePrompt (' ' + $repo.Branch + ' ') 'Cyan'
     }
 
     # Show the nesting and default separators in the prompt.
