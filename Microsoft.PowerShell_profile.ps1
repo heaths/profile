@@ -151,4 +151,11 @@ new-variable Profile_SearchParent -option Constant -visibility Private -value {
 }
 }
 
+# Useful variables.
+
+new-object PSObject | `
+    add-member -name Branch -type ScriptProperty -value { (&$Profile_GetBranch).Branch } -passthru | `
+    add-member -name Root -type ScriptProperty -value { (&$Profile_GetRepo).Path } -passthru | `
+    new-variable -name Git -option Constant -scope Global
+
 # vim: set et sts=4 sw=4 ts=8:
