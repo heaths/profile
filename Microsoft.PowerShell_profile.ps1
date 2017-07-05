@@ -158,4 +158,11 @@ new-object PSObject | `
     add-member -name Root -type ScriptProperty -value { (&$Profile_GetRepo).Path } -passthru | `
     new-variable -name Git -option Constant -scope Global
 
+# Chocolatey profile
+
+$ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+if (Test-Path($ChocolateyProfile)) {
+  Import-Module "$ChocolateyProfile"
+}
+
 # vim: set et sts=4 sw=4 ts=8:
