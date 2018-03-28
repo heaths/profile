@@ -1,9 +1,6 @@
 [submodule "Modules/Gpx"]
 	path = Modules/Gpx
 	url = https://github.com/heaths/gpx
-[submodule "Modules/Help"]
-	path = Modules/Help
-	url = https://git01.codeplex.com/pshelp
 [submodule "Modules/VSTS"]
 	path = Modules/VSTS
 	url = https://gist.github.com/ffd23a68e382a9c44352bd7421c484e0.git
