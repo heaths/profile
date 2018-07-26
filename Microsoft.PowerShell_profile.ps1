@@ -6,6 +6,15 @@ split-path $MyInvocation.MyCommand.Path | foreach-object {
     if (($path = join-path $_ My.format.ps1xml) -and (test-path $path)) { $path | update-formatdata }
 }
 
+# Aliases
+if (test-path alias:\curl) {
+    remove-item alias:\curl
+}
+
+if (-not [Environment]::Is64BitProcess) {
+    new-alias curl "${env:SystemRoot}\SysNative\curl.exe"
+}
+
 # Set up drive roots for convenience
 if ((test-path ~\Source\Repos) -and -not (test-path Repos:\)) {
     $null = new-psdrive -name Repos -psprovider FileSystem -root ~\Source\Repos
