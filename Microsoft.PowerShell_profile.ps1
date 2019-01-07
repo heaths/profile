@@ -20,6 +20,9 @@ if ((test-path ~\Source\Repos) -and -not (test-path Repos:\)) {
     $null = new-psdrive -name Repos -psprovider FileSystem -root ~\Source\Repos
 }
 
+# Preferences
+[bool] $global:PromptExecutionTimePreference = $true
+
 # Change the defualt prompt.
 function global:prompt
 {
@@ -28,8 +31,15 @@ function global:prompt
         &$Profile_WritePrompt 'DBG' 'Red'
     }
 
+    write-host -nonewline 'PS '
+
+    # Optionally show execution time in the prompt.
+    if ($PromptExecutionTimePreference -and ($h = get-history -count 1)) {
+        write-host -nonewline "[$($h.ExecutionTime.ToString('hh\:mm\:ss\.fff'))] " -foregroundcolor 'DarkCyan'
+    }
+
     # Show current location in the prompt.
-    write-host $('PS ' + $PWD)
+    write-host $PWD
 
     # Show current repo branch in the prompt.
     if ($repo = &$Profile_GetBranch -and $repo.Branch) {
