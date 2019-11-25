@@ -26,53 +26,62 @@ if ((test-path ~\Source\Repos) -and -not (test-path Repos:\)) {
 # Change the defualt prompt.
 function global:prompt
 {
-    # Show if debugging in the prompt.
-    if ($PSDebugContext) {
-        &$Profile_WritePrompt 'DBG' 'Red'
-    }
+    $ESC    = [char]0x1b
+    $SEP    = [char]0xe0b0
+    $GT     = [char]0xe0b1
+    $BRANCH = [char]0xe0a0
 
-    write-host -nonewline 'PS '
+    $BLUE   = 31
+    $GRAY2  = 236
+    $GRAY4  = 240
+    # $GRAY9  = 250
+    # $GRAY10 = 252
+    $PURPLE = 55
+    $RED    = 1
+    $WHITE  = 231
 
-    # Optionally show execution time in the prompt.
-    if ($PromptExecutionTimePreference -and ($h = get-history -count 1)) {
-        write-host -nonewline "[$($h.ExecutionTime.ToString('hh\:mm\:ss\.fff'))] " -foregroundcolor 'DarkCyan'
-    }
+    $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, 0
+    @(
+        {if ($PSDebugContext) {'DBG', $WHITE, $RED}}
+        {'PS', $WHITE, $PURPLE}
+        {if ($PromptExecutionTimePreference -and ($h = get-history -count 1)) {
+            $h.ExecutionTime.ToString('hh\:mm\:ss\.fff'), $WHITE, $BLUE
+        }}
+        {$PWD, $WHITE, $GRAY4}
+        {"`n"}
+        {if ($repo = &$Profile_GetBranch -and $repo.Branch) {("$BRANCH " + $repo.Branch), $WHITE, $GRAY2}}
+        {('+' * $global:ExecutionContext.SessionState.Path.LocationStack($null).Count), $WHITE, $GRAY4}
+        {("$GT" * $NestedPromptLevel), $WHITE, $GRAY4}
+    ) | foreach-object -process {
+        $str, $fg, $bg = $_.Invoke()
 
-    # Show current location in the prompt.
-    write-host $PWD
+        if (!$str) {
+            return
+        }
 
-    # Show current repo branch in the prompt.
-    if ($repo = &$Profile_GetBranch -and $repo.Branch) {
-        &$Profile_WritePrompt (' ' + $repo.Branch + ' ') 'Cyan'
-    }
+        if ($str -eq "`n") {
+            " $ESC[0;38;5;${prevbg}m$SEP$ESC[0m`n"
+            $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, $GRAY4
+            return
+        } elseif ($prevstr) {
+            " $ESC[0;38;5;$prevbg;48;5;${bg}m$SEP "
+        }
 
-    # Show the nesting and default separators in the prompt.
-    '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + '>' * $NestedPromptLevel + '> '
+        "$ESC[0;38;5;$fg;48;5;${bg}m$str"
+        $script:prevstr, $script:prevfg, $script:prevbg = $str, $fg, $bg
+    } -end {
+        if ($prevstr) {
+            ' '
+        }
+
+        "$ESC[0;38;5;${prevbg}m$SEP$ESC[0m "
+    } | join-string -separator ''
 }
 
 # Increase history count.
 $global:MaximumHistoryCount = 100
 
 # Private functions
-
-if (-not (test-path variable:\Profile_WritePrompt)) {
-new-variable Profile_WritePrompt -option Constant -visibility Private -scope Private -value {
-
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory=$true, Position=0)]
-        $Token,
-
-        [Parameter(Mandatory=$true, Position=1)]
-        [ConsoleColor] $Foreground
-    )
-
-    write-host '[' -foreground 'Yellow' -nonewline
-    write-host $Token -foreground $Foreground -nonewline
-    write-host '] ' -foreground 'Yellow' -nonewline
-}
-}
 
 if (-not (test-path variable:\Profile_GetBranch)) {
 new-variable Profile_GetBranch -option Constant -visibility Private -value {
@@ -170,10 +179,12 @@ new-variable Profile_SearchParent -option Constant -visibility Private -value {
 
 # Useful variables.
 
+if (-not (test-path variable:\Git)) {
 new-object PSObject | `
     add-member -name Branch -type ScriptProperty -value { (&$Profile_GetBranch).Branch } -passthru | `
     add-member -name Root -type ScriptProperty -value { (&$Profile_GetRepo).Path } -passthru | `
     new-variable -name Git -option Constant -scope Global
+}
 
 # Chocolatey profile
 

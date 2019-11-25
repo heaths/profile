@@ -1,7 +1,5 @@
 Help/
 Modules/*
 !Modules/Fusion
-!Modules/Gpx
-!Modules/Help
 !Modules/My
 !Modules/VSTS
