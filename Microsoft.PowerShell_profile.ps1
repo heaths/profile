@@ -28,26 +28,27 @@ function global:prompt
 {
     # Show if debugging in the prompt.
     if ($PSDebugContext) {
-        &$Profile_WritePrompt 'DBG' 'Red'
+        write-host -nonewline $Profile_Scheme.dbg
     }
 
-    write-host -nonewline 'PS '
+    write-host -nonewline $Profile_Scheme.ps
 
     # Optionally show execution time in the prompt.
     if ($PromptExecutionTimePreference -and ($h = get-history -count 1)) {
-        write-host -nonewline "[$($h.ExecutionTime.ToString('hh\:mm\:ss\.fff'))] " -foregroundcolor 'DarkCyan'
+        $Profile_Scheme.time -f $h.ExecutionTime.ToString('hh\:mm\:ss\.fff') | write-host -nonewline
     }
 
     # Show current location in the prompt.
-    write-host $PWD
+    $Profile_Scheme.path -f $PWD | write-host
 
     # Show current repo branch in the prompt.
     if ($repo = &$Profile_GetBranch -and $repo.Branch) {
-        &$Profile_WritePrompt (' ' + $repo.Branch + ' ') 'Cyan'
+        $Profile_Scheme.branch -f $repo.Branch | write-host -nonewline
     }
 
     # Show the nesting and default separators in the prompt.
-    '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + '>' * $NestedPromptLevel + '> '
+    [string] $p = '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + '>' * $NestedPromptLevel
+    $Profile_Scheme.prompt -f $p | write-host
 }
 
 # Increase history count.
@@ -55,23 +56,30 @@ $global:MaximumHistoryCount = 100
 
 # Private functions
 
-if (-not (test-path variable:\Profile_WritePrompt)) {
-new-variable Profile_WritePrompt -option Constant -visibility Private -scope Private -value {
+if (-not (test-path variable:\Profile_Scheme)) {
+new-variable Profile_Scheme -option Constant -visibility Private -value $(
+    $ESC    = [char]0x1b
+    $SEP    = [char]0xe0b0
+    $GT     = [char]0xe0b1
+    $BRANCH = [char]0xe0a0
 
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory=$true, Position=0)]
-        $Token,
+    $GRAY2  = 236
+    $GRAY4  = 240
+    $GRAY9  = 250
+    $GRAY10 = 252
+    $PURPLE = 55
+    $RED    = 1
+    $WHITE  = 231
 
-        [Parameter(Mandatory=$true, Position=1)]
-        [ConsoleColor] $Foreground
-    )
-
-    write-host '[' -foreground 'Yellow' -nonewline
-    write-host $Token -foreground $Foreground -nonewline
-    write-host '] ' -foreground 'Yellow' -nonewline
-}
+    convertfrom-stringdata @"
+dbg=$ESC[0;38;5;$RED;48;5;${GRAY9}mDBG$ESC[38;5;$GRAY9;48;5;${PURPLE}m$SEP
+ps=$ESC[0;38;5;$WHITE;48;5;${PURPLE}mPS
+time=$ESC[38;5;$PURPLE;48;5;${GRAY2}m{0}$ESC[38;5;$GRAY10;48;5;${GRAY4}m$SEP
+path=$ESC[38;5;$GRAY4;48;5;${GRAY10}m{0}$ESC[38;5;$GRAY10;39m$SEP
+branch=$ESC[0;38;5;$GRAY9;48;5;${GRAY2}m$BRANCH {0} $ESC[48;5;$GRAY4;7m$SEP
+prompt=$ESC[0;38;5;$GRAY10;48;5;${GRAY4}m{0}$ESC[39m$SEP$ESC[0m
+"@
+)
 }
 
 if (-not (test-path variable:\Profile_GetBranch)) {
@@ -170,10 +178,12 @@ new-variable Profile_SearchParent -option Constant -visibility Private -value {
 
 # Useful variables.
 
+if (-not (test-path variable:\Git)) {
 new-object PSObject | `
     add-member -name Branch -type ScriptProperty -value { (&$Profile_GetBranch).Branch } -passthru | `
     add-member -name Root -type ScriptProperty -value { (&$Profile_GetRepo).Path } -passthru | `
     new-variable -name Git -option Constant -scope Global
+}
 
 # Chocolatey profile
 
