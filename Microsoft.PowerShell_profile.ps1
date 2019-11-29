@@ -26,61 +26,62 @@ if ((test-path ~\Source\Repos) -and -not (test-path Repos:\)) {
 # Change the defualt prompt.
 function global:prompt
 {
-    # Show if debugging in the prompt.
-    if ($PSDebugContext) {
-        write-host -nonewline $Profile_Scheme.dbg
-    }
+    $ESC    = [char]0x1b
+    $SEP    = [char]0xe0b0
+    $GT     = [char]0xe0b1
+    $BRANCH = [char]0xe0a0
 
-    write-host -nonewline $Profile_Scheme.ps
+    $BLUE   = 31
+    $GRAY2  = 236
+    $GRAY4  = 240
+    # $GRAY9  = 250
+    # $GRAY10 = 252
+    $PURPLE = 55
+    $RED    = 1
+    $WHITE  = 231
 
-    # Optionally show execution time in the prompt.
-    if ($PromptExecutionTimePreference -and ($h = get-history -count 1)) {
-        $Profile_Scheme.time -f $h.ExecutionTime.ToString('hh\:mm\:ss\.fff') | write-host -nonewline
-    }
+    $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, 0
+    @(
+        {if ($PSDebugContext) {'DBG', $WHITE, $RED}}
+        {'PS', $WHITE, $PURPLE}
+        {if ($PromptExecutionTimePreference -and ($h = get-history -count 1)) {
+            $h.ExecutionTime.ToString('hh\:mm\:ss\.fff'), $WHITE, $BLUE
+        }}
+        {$PWD, $WHITE, $GRAY4}
+        {"`n"}
+        {if ($repo = &$Profile_GetBranch -and $repo.Branch) {("$BRANCH " + $repo.Branch), $WHITE, $GRAY2}}
+        {('+' * $global:ExecutionContext.SessionState.Path.LocationStack($null).Count), $WHITE, $GRAY4}
+        {("$GT" * $NestedPromptLevel), $WHITE, $GRAY4}
+    ) | foreach-object -process {
+        $str, $fg, $bg = $_.Invoke()
 
-    # Show current location in the prompt.
-    $Profile_Scheme.path -f $PWD | write-host
+        if (!$str) {
+            return
+        }
 
-    # Show current repo branch in the prompt.
-    if ($repo = &$Profile_GetBranch -and $repo.Branch) {
-        $Profile_Scheme.branch -f $repo.Branch | write-host -nonewline
-    }
+        if ($str -eq "`n") {
+            " $ESC[0;38;5;${prevbg}m$SEP$ESC[0m`n"
+            $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, $GRAY4
+            return
+        } elseif ($prevstr) {
+            " $ESC[0;38;5;$prevbg;48;5;${bg}m$SEP "
+        }
 
-    # Show the nesting and default separators in the prompt.
-    [string] $p = '+' * $ExecutionContext.SessionState.Path.LocationStack($null).Count + '>' * $NestedPromptLevel
-    $Profile_Scheme.prompt -f $p | write-host
+        "$ESC[0;38;5;$fg;48;5;${bg}m$str"
+        $script:prevstr, $script:prevfg, $script:prevbg = $str, $fg, $bg
+    } -end {
+        if ($prevstr) {
+            ' '
+        }
+
+        "$ESC[0;38;5;${prevbg}m$SEP$ESC[0m "
+    } | join-string -separator ''
 }
 
 # Increase history count.
 $global:MaximumHistoryCount = 100
 
 # Private functions
-
-if (-not (test-path variable:\Profile_Scheme)) {
-new-variable Profile_Scheme -option Constant -visibility Private -value $(
-    $ESC    = [char]0x1b
-    $SEP    = [char]0xe0b0
-    $GT     = [char]0xe0b1
-    $BRANCH = [char]0xe0a0
-
-    $GRAY2  = 236
-    $GRAY4  = 240
-    $GRAY9  = 250
-    $GRAY10 = 252
-    $PURPLE = 55
-    $RED    = 1
-    $WHITE  = 231
-
-    convertfrom-stringdata @"
-dbg=$ESC[0;38;5;$RED;48;5;${GRAY9}mDBG$ESC[38;5;$GRAY9;48;5;${PURPLE}m$SEP
-ps=$ESC[0;38;5;$WHITE;48;5;${PURPLE}mPS
-time=$ESC[38;5;$PURPLE;48;5;${GRAY2}m{0}$ESC[38;5;$GRAY10;48;5;${GRAY4}m$SEP
-path=$ESC[38;5;$GRAY4;48;5;${GRAY10}m{0}$ESC[38;5;$GRAY10;39m$SEP
-branch=$ESC[0;38;5;$GRAY9;48;5;${GRAY2}m$BRANCH {0} $ESC[48;5;$GRAY4;7m$SEP
-prompt=$ESC[0;38;5;$GRAY10;48;5;${GRAY4}m{0}$ESC[39m$SEP$ESC[0m
-"@
-)
-}
 
 if (-not (test-path variable:\Profile_GetBranch)) {
 new-variable Profile_GetBranch -option Constant -visibility Private -value {
