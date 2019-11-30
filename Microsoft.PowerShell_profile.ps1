@@ -136,6 +136,7 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
     $BLUE   = 31
     $DARKGRAY  = 236
     $LIGHTGRAY  = 240
+    $LIGHTERGRAY = 252
     $PURPLE = 55
     $RED    = 1
     $WHITE  = 231
@@ -150,9 +151,9 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
         {"`n"}
         {if ($repo = &$Profile_GetBranch -and $repo.Branch) {("$BRANCH $($repo.Branch) "), $WHITE, $DARKGRAY}}
         {if ($c = $global:ExecutionContext.SessionState.Path.LocationStack($null).Count) {
-            (' ' + '+' * $c), $WHITE, $LIGHTGRAY
+            (' ' + '+' * $c), $LIGHTERGRAY, $LIGHTGRAY
         }}
-        {("$GT" * $NestedPromptLevel), $WHITE, $LIGHTGRAY}
+        {("$GT" * $NestedPromptLevel), $LIGHTERGRAY, $LIGHTGRAY}
     )
 )
 }
