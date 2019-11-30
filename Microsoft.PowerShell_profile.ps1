@@ -149,7 +149,9 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
         {" $PWD ", $WHITE, $LIGHTGRAY}
         {"`n"}
         {if ($repo = &$Profile_GetBranch -and $repo.Branch) {("$BRANCH $($repo.Branch) "), $WHITE, $DARKGRAY}}
-        {('+' * $global:ExecutionContext.SessionState.Path.LocationStack($null).Count), $WHITE, $LIGHTGRAY}
+        {if ($c = $global:ExecutionContext.SessionState.Path.LocationStack($null).Count) {
+            (' ' + '+' * $c), $WHITE, $LIGHTGRAY
+        }}
         {("$GT" * $NestedPromptLevel), $WHITE, $LIGHTGRAY}
     )
 )
