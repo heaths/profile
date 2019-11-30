@@ -24,58 +24,8 @@ if ((test-path ~\Source\Repos) -and -not (test-path Repos:\)) {
 [bool] $global:PromptExecutionTimePreference = $true
 
 # Change the defualt prompt.
-function global:prompt
-{
-    $ESC    = [char]0x1b
-    $SEP    = [char]0xe0b0
-    $GT     = [char]0xe0b1
-    $BRANCH = [char]0xe0a0
-
-    $BLUE   = 31
-    $GRAY2  = 236
-    $GRAY4  = 240
-    # $GRAY9  = 250
-    # $GRAY10 = 252
-    $PURPLE = 55
-    $RED    = 1
-    $WHITE  = 231
-
-    $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, 0
-    @(
-        {if ($PSDebugContext) {'DBG', $WHITE, $RED}}
-        {'PS', $WHITE, $PURPLE}
-        {if ($PromptExecutionTimePreference -and ($h = get-history -count 1)) {
-            $h.ExecutionTime.ToString('hh\:mm\:ss\.fff'), $WHITE, $BLUE
-        }}
-        {$PWD, $WHITE, $GRAY4}
-        {"`n"}
-        {if ($repo = &$Profile_GetBranch -and $repo.Branch) {("$BRANCH " + $repo.Branch), $WHITE, $GRAY2}}
-        {('+' * $global:ExecutionContext.SessionState.Path.LocationStack($null).Count), $WHITE, $GRAY4}
-        {("$GT" * $NestedPromptLevel), $WHITE, $GRAY4}
-    ) | foreach-object -process {
-        $str, $fg, $bg = $_.Invoke()
-
-        if (!$str) {
-            return
-        }
-
-        if ($str -eq "`n") {
-            " $ESC[0;38;5;${prevbg}m$SEP$ESC[0m`n"
-            $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, $GRAY4
-            return
-        } elseif ($prevstr) {
-            " $ESC[0;38;5;$prevbg;48;5;${bg}m$SEP "
-        }
-
-        "$ESC[0;38;5;$fg;48;5;${bg}m$str"
-        $script:prevstr, $script:prevfg, $script:prevbg = $str, $fg, $bg
-    } -end {
-        if ($prevstr) {
-            ' '
-        }
-
-        "$ESC[0;38;5;${prevbg}m$SEP$ESC[0m "
-    } | join-string -separator ''
+function global:prompt {
+    $Profile_Prompt | &$Profile_FormatPrompt
 }
 
 # Increase history count.
@@ -174,6 +124,72 @@ new-variable Profile_SearchParent -option Constant -visibility Private -value {
             resolve-path $parent
         }
     }
+}
+}
+
+if (-not (test-path variable:\Profile_Prompt)) {
+new-variable Profile_Prompt -option Constant -visibility Private -value $(
+    $ESC    = [char]0x1b
+    $GT     = [char]0xe0b1
+    $BRANCH = [char]0xe0a0
+
+    $BLUE   = 31
+    $DARKGRAY  = 236
+    $LIGHTGRAY  = 240
+    $PURPLE = 55
+    $RED    = 1
+    $WHITE  = 231
+
+    @(
+        {if ($PSDebugContext) {'DBG', $WHITE, $RED}}
+        {'PS', $WHITE, $PURPLE}
+        {if ($PromptExecutionTimePreference -and ($h = get-history -count 1)) {
+            (' {0:hh\:mm\:ss\.fff} ' -f $h.ExecutionTime), $WHITE, $BLUE
+        }}
+        {" $PWD ", $WHITE, $LIGHTGRAY}
+        {"`n"}
+        {if ($repo = &$Profile_GetBranch -and $repo.Branch) {("$BRANCH $($repo.Branch) "), $WHITE, $DARKGRAY}}
+        {('+' * $global:ExecutionContext.SessionState.Path.LocationStack($null).Count), $WHITE, $LIGHTGRAY}
+        {("$GT" * $NestedPromptLevel), $WHITE, $LIGHTGRAY}
+    )
+)
+}
+
+if (-not (test-path variable:\Profile_FormatPrompt)) {
+new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
+    $ESC    = [char]0x1b
+    $SEP    = [char]0xe0b0
+
+    $LIGHTGRAY  = 240
+
+    $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, 0
+    $prompt = $Input | foreach-object -process {
+        $str, $fg, $bg = $_.Invoke()
+
+        if (!$str) {
+            return
+        }
+
+        if ($str -eq "`n") {
+            "$ESC[0;38;5;${prevbg}m$SEP$ESC[0m`n"
+            $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, $LIGHTGRAY
+            return
+        } elseif ($prevstr -and $prevbg -ne $bg) {
+            "$ESC[0;38;5;$prevbg;48;5;${bg}m$SEP"
+        }
+
+        "$ESC[0;38;5;$fg;48;5;${bg}m$str"
+        $script:prevstr, $script:prevfg, $script:prevbg = $str, $fg, $bg
+    } -end {
+        if ($prevbg -ne $LIGHTGRAY) {
+            "$ESC[0;38;5;$prevbg;48;5;${LIGHTGRAY}m$SEP"
+        }
+
+        "$ESC[0;38;5;${LIGHTGRAY}m$SEP$ESC[0m "
+
+    }
+
+    -join $prompt
 }
 }
 
