@@ -12,7 +12,6 @@ function Get-Cultures
     [System.Globalization.CultureInfo]::GetCultures($Type) `
         | script:add-type 'System.Globalization.CultureInfo#Developer'
 }
-export-modulemember -function 'Get-Cultures'
 
 if ($PSVersionTable.PSVersion -lt '4.0')
 {
@@ -105,8 +104,6 @@ function Get-FileHash
         }
     }
 }
-
-export-modulemember -function 'Get-FileHash'
 }
 
 function Join-Object
@@ -157,7 +154,6 @@ function Join-Object
         }
     }
 }
-export-modulemember -function 'Join-Object'
 
 function Measure-Group
 {
@@ -213,7 +209,6 @@ function Measure-Group
         }} | select-object $ExpandedProperties
     }
 }
-export-modulemember -function 'Measure-Group'
 
 function Select-RegexGroups
 {
@@ -262,7 +257,6 @@ function Select-RegexGroups
         }
     }
 }
-export-modulemember -function 'Select-RegexGroups'
 
 function Select-Unique
 {
@@ -329,7 +323,6 @@ function Select-Unique
         }
     }
 }
-export-modulemember -function 'Select-Unique'
 
 function Test-Elevated
 {
@@ -349,7 +342,6 @@ function Test-Elevated
     $p = new-object System.Security.Principal.WindowsPrincipal $id
     $p.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
 }
-export-modulemember -function 'Test-Elevated'
 
 # Page output one screen at a time
 filter page ( [int] $lines = $($Host.UI.RawUI.WindowSize.Height - 1) )
@@ -380,7 +372,6 @@ filter page ( [int] $lines = $($Host.UI.RawUI.WindowSize.Height - 1) )
         }
     }
 }
-export-modulemember -function 'page'
 
 # Select which objects to send through the pipeline
 filter pick
@@ -394,7 +385,6 @@ filter pick
     if ( $ch.Character -ieq 'y' ) { $_ }
     elseif ( $ch.Character -ieq 'q' ) { break }
 }
-export-modulemember -function 'pick'
 
 # Sleep between objects in the pipeline
 filter slow ( [int] $tempo = 100 )
@@ -402,7 +392,6 @@ filter slow ( [int] $tempo = 100 )
     $_
     start-sleep -milliseconds $tempo
 }
-export-modulemember -function 'slow'
 
 
 # Private functions
