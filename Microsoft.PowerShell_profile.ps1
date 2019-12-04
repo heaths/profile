@@ -2,8 +2,8 @@
 
 # Add custom type and format data
 split-path $MyInvocation.MyCommand.Path | foreach-object {
-    if (($path = join-path $_ My.types.ps1xml) -and (test-path $path)) { $path | update-typedata }
-    if (($path = join-path $_ My.format.ps1xml) -and (test-path $path)) { $path | update-formatdata }
+    if (($path = join-path $_ profile.types.ps1xml) -and (test-path $path)) { $path | update-typedata }
+    if (($path = join-path $_ profile.format.ps1xml) -and (test-path $path)) { $path | update-formatdata }
 }
 
 # Aliases
