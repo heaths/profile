@@ -129,41 +129,46 @@ new-variable Profile_SearchParent -option Constant -visibility Private -value {
 
 if (-not (test-path variable:\Profile_Prompt)) {
 new-variable Profile_Prompt -option Constant -visibility Private -value $(
-    $ESC    = [char]0x1b
-    $GT     = [char]0xe0b1
-    $BRANCH = [char]0xe0a0
+    new-variable Profile_Seq -option Constant -visibility Private -value @{
+        ESC    = [char]0x1b
+        SEP   = [char]0xe0b0
+        GT     = [char]0xe0b1
+        BRANCH = [char]0xe0a0
 
-    $BLUE   = 31
-    $DARKGRAY  = 236
-    $LIGHTGRAY  = 240
-    $LIGHTERGRAY = 252
-    $PURPLE = 55
-    $RED    = 1
-    $WHITE  = 231
+        BLUE        = 31
+        DARKGRAY    = 236
+        LIGHTGRAY   = 240
+        LIGHTERGRAY = 252
+        PURPLE      = 55
+        RED         = 1
+        WHITE       = 231
+    }
 
     @(
-        {if ($PSDebugContext) {'DBG', $WHITE, $RED}}
-        {'PS', $WHITE, $PURPLE}
+        {if ($PSDebugContext) {'DBG', $Profile_Seq.WHITE, $Profile_Seq.RED}}
+        {'PS', $Profile_Seq.WHITE, $Profile_Seq.PURPLE}
         {if ($PromptExecutionTimePreference -and ($h = get-history -count 1)) {
-            (' {0:hh\:mm\:ss\.fff} ' -f $h.ExecutionTime), $WHITE, $BLUE
+            (' {0:hh\:mm\:ss\.fff} ' -f $h.ExecutionTime), $Profile_Seq.WHITE, $Profile_Seq.BLUE
         }}
-        {" $PWD ", $WHITE, $LIGHTGRAY}
+        {" $PWD ", $Profile_Seq.WHITE, $Profile_Seq.LIGHTGRAY}
         {"`n"}
-        {if ($repo = &$Profile_GetBranch -and $repo.Branch) {("$BRANCH $($repo.Branch) "), $WHITE, $DARKGRAY}}
-        {if ($c = $global:ExecutionContext.SessionState.Path.LocationStack($null).Count) {
-            (' ' + '+' * $c), $LIGHTERGRAY, $LIGHTGRAY
+        {if ($repo = &$Profile_GetBranch -and $repo.Branch) {
+            ("$($Profile_Seq.BRANCH) $($repo.Branch) "), $Profile_Seq.WHITE, $Profile_Seq.DARKGRAY
         }}
-        {("$GT" * $NestedPromptLevel), $LIGHTERGRAY, $LIGHTGRAY}
+        {if ($c = $global:ExecutionContext.SessionState.Path.LocationStack($null).Count) {
+            (' ' + '+' * $c), $Profile_Seq.LIGHTERGRAY, $Profile_Seq.LIGHTGRAY
+        }}
+        {("$($Profile_Seq.GT)" * $NestedPromptLevel), $Profile_Seq.LIGHTERGRAY, $Profile_Seq.LIGHTGRAY}
     )
 )
 }
 
 if (-not (test-path variable:\Profile_FormatPrompt)) {
 new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
-    $ESC    = [char]0x1b
-    $SEP    = [char]0xe0b0
+    $ESC    = $Profile_Seq.ESC
+    $SEP    = $Profile_Seq.SEP
 
-    $LIGHTGRAY  = 240
+    $LIGHTGRAY  = $Profile_Seq.LIGHTGRAY
 
     $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, 0
     $prompt = $Input | foreach-object -process {
