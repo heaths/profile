@@ -23,10 +23,13 @@ if ((test-path ~\Source\Repos) -and -not (test-path Repos:\)) {
 # Preferences
 [bool] $global:PromptExecutionTimePreference = $true
 
-# Change the defualt prompt.
+# Change the default prompt.
 function global:prompt {
     $Profile_Prompt | &$Profile_FormatPrompt
 }
+
+# TODO: Uncomment when https://github.com/PowerShell/PSReadLine/issues/1188 is fixed.
+# Set-PSReadLineOption -ContinuationPrompt "`e[0;38;5;252;48;5;240m`u{e0b1}`u{e0b1}`e[0;38;5;240m`u{e0b0}`e[0m "
 
 # Increase history count.
 $global:MaximumHistoryCount = 100
