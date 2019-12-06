@@ -11,12 +11,12 @@ if (test-path alias:\curl) {
     remove-item alias:\curl
 }
 
-if (-not [Environment]::Is64BitProcess) {
+if (![Environment]::Is64BitProcess) {
     new-alias curl "${env:SystemRoot}\SysNative\curl.exe"
 }
 
 # Set up drive roots for convenience
-if ((test-path ~\Source\Repos) -and -not (test-path Repos:\)) {
+if ((test-path ~\Source\Repos) -and !(test-path Repos:\)) {
     $null = new-psdrive -name Repos -psprovider FileSystem -root ~\Source\Repos
 }
 
@@ -36,7 +36,7 @@ $global:MaximumHistoryCount = 100
 
 # Private functions
 
-if (-not (test-path variable:\Profile_GetBranch)) {
+if (!(test-path variable:\Profile_GetBranch)) {
 new-variable Profile_GetBranch -option Constant -visibility Private -value {
 
     if ($dir = &$Profile_GetRepo) {
@@ -71,10 +71,9 @@ new-variable Profile_GetBranch -option Constant -visibility Private -value {
 
         $repo
     }
-}
-}
+}}
 
-if (-not (test-path variable:\Profile_GetRepo)) {
+if (!(test-path variable:\Profile_GetRepo)) {
 new-variable Profile_GetRepo -option Constant -visibility Private -value {
 
     if ((test-path env:GIT_DIR) -and (test-path $env:GIT_DIR -pathtype 'Container')) {
@@ -101,10 +100,9 @@ new-variable Profile_GetRepo -option Constant -visibility Private -value {
             return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Hg' -passthru)
         }
     }
-}
-}
+}}
 
-if (-not (test-path variable:\Profile_SearchParent)) {
+if (!(test-path variable:\Profile_SearchParent)) {
 new-variable Profile_SearchParent -option Constant -visibility Private -value {
 
     [CmdletBinding()]
@@ -127,10 +125,9 @@ new-variable Profile_SearchParent -option Constant -visibility Private -value {
             resolve-path $parent
         }
     }
-}
-}
+}}
 
-if (-not (test-path variable:\Profile_Prompt)) {
+if (!(test-path variable:\Profile_Prompt)) {
 new-variable Profile_Prompt -option Constant -visibility Private -value $(
     new-variable Profile_Colors -option Constant -visibility Private -value @{
         BLUE        = 31
@@ -139,14 +136,18 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
         LIGHTERGRAY = 252
         PURPLE      = 55
         RED         = 1
+        DARKRED     = 52
         WHITE       = 231
     }
 
     @(
         {if ($PSDebugContext) {'DBG', $Profile_Colors.WHITE, $Profile_Colors.RED}}
         {'PS', $Profile_Colors.WHITE, $Profile_Colors.PURPLE}
-        {if ($PromptExecutionTimePreference -and ($h = get-history -count 1)) {
-            (' {0:hh\:mm\:ss\.fff} ' -f $h.ExecutionTime), $Profile_Colors.WHITE, $Profile_Colors.BLUE
+        {if ($h = get-history -count 1) {
+            (' {0} ' -f $h.Id), $Profile_Colors.WHITE, $Profile_Colors.BLUE
+            if ($PromptExecutionTimePreference) {
+                (' {0:hh\:mm\:ss\.fff} ' -f $h.ExecutionTime), $Profile_Colors.WHITE, $Profile_Colors.BLUE
+            }
         }}
         {" $PWD ", $Profile_Colors.WHITE, $Profile_Colors.LIGHTGRAY}
         {"`n"}
@@ -158,31 +159,36 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
         }}
         {("`u{e0b1}" * $NestedPromptLevel), $Profile_Colors.LIGHTERGRAY, $Profile_Colors.LIGHTGRAY}
     )
-)
-}
+)}
 
-if (-not (test-path variable:\Profile_FormatPrompt)) {
+if (!(test-path variable:\Profile_FormatPrompt)) {
 new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
-    $LIGHTGRAY  = $Profile_Colors.LIGHTGRAY
+    $LIGHTGRAY   = $Profile_Colors.LIGHTGRAY
+    $LIGHTERGRAY = $Profile_Colors.LIGHTERGRAY
 
     $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, 0
     $prompt = $Input | foreach-object -process {
-        $str, $fg, $bg = $_.Invoke()
+        $str, $fg, $bg, $next = $_.Invoke()
+        do {
+            if (!$str) {
+                return
+            }
 
-        if (!$str) {
-            return
-        }
+            if ($str -eq "`n") {
+                "`e[0;38;5;${prevbg}m`u{e0b0}`e[0m`n"
+                $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, $LIGHTGRAY
+                return
+            } elseif ($prevstr -and $prevbg -ne $bg) {
+                "`e[0;38;5;${prevbg};48;5;${bg}m`u{e0b0}"
+            } elseif ($prevstr -and $prevbg -eq $bg) {
+                "`e[38;5;${LIGHTERGRAY}m`u{e0b1}`e[38;5;${prevfg}m"
+            }
 
-        if ($str -eq "`n") {
-            "`e[0;38;5;${prevbg}m`u{e0b0}`e[0m`n"
-            $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, $LIGHTGRAY
-            return
-        } elseif ($prevstr -and $prevbg -ne $bg) {
-            "`e[0;38;5;${prevbg};48;5;${bg}m`u{e0b0}"
-        }
+            "`e[0;38;5;$fg;48;5;${bg}m$str"
+            $script:prevstr, $script:prevfg, $script:prevbg = $str, $fg, $bg
 
-        "`e[0;38;5;$fg;48;5;${bg}m$str"
-        $script:prevstr, $script:prevfg, $script:prevbg = $str, $fg, $bg
+            $str, $fg, $bg, $next = $next
+        } while ($str -and $fg -and $bg)
     } -end {
         if ($prevbg -ne $LIGHTGRAY) {
             "`e[0;38;5;${prevbg};48;5;${LIGHTGRAY}m`u{e0b0}"
@@ -193,12 +199,11 @@ new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
     }
 
     -join $prompt
-}
-}
+}}
 
 # Useful variables.
 
-if (-not (test-path variable:\Git)) {
+if (!(test-path variable:\Git)) {
 new-object PSObject | `
     add-member -name Branch -type ScriptProperty -value { (&$Profile_GetBranch).Branch } -passthru | `
     add-member -name Root -type ScriptProperty -value { (&$Profile_GetRepo).Path } -passthru | `
@@ -215,10 +220,10 @@ if (Test-Path($ChocolateyProfile)) {
 # Parameter completions
 
 Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
-     param($commandName, $wordToComplete, $cursorPosition)
-     dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object {
-        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-     }
- }
+    param($commandName, $wordToComplete, $cursorPosition)
+    dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object {
+    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
+}
 
 # vim: set et sts=4 sw=4 ts=8:
