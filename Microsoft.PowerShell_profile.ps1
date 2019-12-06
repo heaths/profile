@@ -150,6 +150,17 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
             if ($PromptExecutionTimePreference) {
                 (' {0:hh\:mm\:ss\.fff} ' -f $h.ExecutionTime), $Profile_Colors.WHITE, $Profile_Colors.BLUE
             }
+            if ($prevhid -ne $h.Id) {
+                $script:prevhid = $h.Id
+                $script:preverr = 0
+            }
+        }}
+        {if ($global:LASTEXITCODE) {
+            $script:preverr = $global:LASTEXITCODE
+            $global:LASTEXITCODE = 0
+        }
+        if ($preverr) {
+            " $preverr ", $Profile_Colors.WHITE, $Profile_Colors.DARKRED
         }}
         {" $PWD ", $Profile_Colors.WHITE, $Profile_Colors.LIGHTGRAY}
         {"`n"}
@@ -190,7 +201,7 @@ new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
             $script:prevstr, $script:prevfg, $script:prevbg = $str, $fg, $bg
 
             $str, $fg, $bg, $next = $next
-        } while ($str -and $fg -and $bg)
+        } while ($bg)
     } -end {
         if ($prevbg -ne $LIGHTGRAY) {
             "`e[0;38;5;${prevbg};48;5;${LIGHTGRAY}m`u{e0b0}"
