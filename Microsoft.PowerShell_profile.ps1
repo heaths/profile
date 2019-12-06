@@ -180,7 +180,7 @@ new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
                 return
             } elseif ($prevstr -and $prevbg -ne $bg) {
                 "`e[0;38;5;${prevbg};48;5;${bg}m`u{e0b0}"
-            } elseif ($prevstr -and $prevbg -eq $bg) {
+            } elseif ($prevstr -and $prevbg -eq $bg -and !$prevstr.EndsWith('+')) {
                 "`e[38;5;${LIGHTERGRAY}m`u{e0b1}`e[38;5;${prevfg}m"
             }
 
