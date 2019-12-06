@@ -82,16 +82,18 @@ new-variable Profile_GetRepo -option Constant -visibility Private -value {
 
     &$Profile_SearchParent {
 
-        if (($gd = join-path $dir '.git') -and (test-path $gd -pathtype 'Container')) {
-            # check if git repository
-            return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
+        if (($gd = join-path $dir '.git') -and (test-path $gd)) {
+            if (test-path $gd -pathtype 'Container') {
+                # check if git repository
+                return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
 
-        } elseif (test-path $gd -pathtype 'Leaf') {
-            # check if git submodule
-            if ((resolve-path $gd | get-content) -match 'gitdir: (?<d>.+)') {
-                # join-path simply concatenates both paths so use path.combine if gitdir is absolute
-                if (($gd = [io.path]::combine($dir, $Matches['d'])) -and (test-path $gd -pathtype 'Container')) {
-                    return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
+            } elseif (test-path $gd -pathtype 'Leaf') {
+                # check if git submodule
+                if ((resolve-path $gd | get-content) -match 'gitdir: (?<d>.+)') {
+                    # join-path simply concatenates both paths so use path.combine if gitdir is absolute
+                    if (($gd = [io.path]::combine($dir, $Matches['d'])) -and (test-path $gd -pathtype 'Container')) {
+                        return (resolve-path $gd | add-member -type NoteProperty -name 'SCM' -value 'Git' -passthru)
+                    }
                 }
             }
 
