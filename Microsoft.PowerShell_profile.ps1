@@ -29,7 +29,7 @@ function global:prompt {
 }
 
 # TODO: Uncomment when https://github.com/PowerShell/PSReadLine/issues/1188 is fixed.
-# Set-PSReadLineOption -ContinuationPrompt "`e[0;38;5;252;48;5;240m`u{e0b1}`u{e0b1}`e[0;38;5;240m`u{e0b0}`e[0m "
+# Set-PSReadLineOption -ContinuationPrompt "$ESC[0;38;5;252;48;5;240m$GT$GT$ESC[0;38;5;240m$SEP$ESC[0m "
 
 # Increase history count.
 $global:MaximumHistoryCount = 100
@@ -131,6 +131,14 @@ new-variable Profile_SearchParent -option Constant -visibility Private -value {
 
 if (!(test-path variable:\Profile_Prompt)) {
 new-variable Profile_Prompt -option Constant -visibility Private -value $(
+    # Windows PowerShell does not support `e or `u escape sequences.
+    new-variable Profile_Chars -option Constant -visibility Private -value @{
+        ESC    = [char]0x1b
+        BRANCH = [char]0xe0a0
+        SEP    = [char]0xe0b0
+        GT     = [char]0xe0b1
+    }
+
     new-variable Profile_Colors -option Constant -visibility Private -value @{
         BLUE        = 31
         DARKGRAY    = 236
@@ -165,17 +173,21 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
         {" $PWD ", $Profile_Colors.WHITE, $Profile_Colors.LIGHTGRAY}
         {"`n"}
         {if ($repo = &$Profile_GetBranch -and $repo.Branch) {
-            ("`u{e0a0} $($repo.Branch) "), $Profile_Colors.WHITE, $Profile_Colors.DARKGRAY
+            ("$($Profile_Chars.BRANCH) $($repo.Branch) "), $Profile_Colors.WHITE, $Profile_Colors.DARKGRAY
         }}
         {if ($c = $global:ExecutionContext.SessionState.Path.LocationStack($null).Count) {
             (' ' + '+' * $c), $Profile_Colors.LIGHTERGRAY, $Profile_Colors.LIGHTGRAY
         }}
-        {("`u{e0b1}" * $NestedPromptLevel), $Profile_Colors.LIGHTERGRAY, $Profile_Colors.LIGHTGRAY}
+        {([string]$Profile_Chars.GT * $NestedPromptLevel), $Profile_Colors.LIGHTERGRAY, $Profile_Colors.LIGHTGRAY}
     )
 )}
 
 if (!(test-path variable:\Profile_FormatPrompt)) {
 new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
+    $ESC = $Profile_Chars.ESC
+    $SEP = $Profile_Chars.SEP
+    $GT  = $Profile_Chars.GT
+
     $LIGHTGRAY   = $Profile_Colors.LIGHTGRAY
     $LIGHTERGRAY = $Profile_Colors.LIGHTERGRAY
 
@@ -188,26 +200,26 @@ new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
             }
 
             if ($str -eq "`n") {
-                "`e[0;38;5;${prevbg}m`u{e0b0}`e[0m`n"
+                "$ESC[0;38;5;${prevbg}m$SEP$ESC[0m`n"
                 $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, $LIGHTGRAY
                 return
             } elseif ($prevstr -and $prevbg -ne $bg) {
-                "`e[0;38;5;${prevbg};48;5;${bg}m`u{e0b0}"
+                "$ESC[0;38;5;${prevbg};48;5;${bg}m$SEP"
             } elseif ($prevstr -and $prevbg -eq $bg -and !$prevstr.EndsWith('+')) {
-                "`e[38;5;${LIGHTERGRAY}m`u{e0b1}`e[38;5;${prevfg}m"
+                "$ESC[38;5;${LIGHTERGRAY}m$GT$ESC[38;5;${prevfg}m"
             }
 
-            "`e[0;38;5;$fg;48;5;${bg}m$str"
+            "$ESC[0;38;5;$fg;48;5;${bg}m$str"
             $script:prevstr, $script:prevfg, $script:prevbg = $str, $fg, $bg
 
             $str, $fg, $bg, $next = $next
         } while ($bg)
     } -end {
         if ($prevbg -ne $LIGHTGRAY) {
-            "`e[0;38;5;${prevbg};48;5;${LIGHTGRAY}m`u{e0b0}"
+            "$ESC[0;38;5;${prevbg};48;5;${LIGHTGRAY}m$SEP"
         }
 
-        "`e[0;38;5;${LIGHTGRAY}m`u{e0b0}`e[0m "
+        "$ESC[0;38;5;${LIGHTGRAY}m$SEP$ESC[0m "
 
     }
 
