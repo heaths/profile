@@ -28,9 +28,6 @@ function global:prompt {
     $Profile_Prompt | &$Profile_FormatPrompt
 }
 
-# TODO: Uncomment when https://github.com/PowerShell/PSReadLine/issues/1188 is fixed.
-# Set-PSReadLineOption -ContinuationPrompt "$ESC[0;38;5;252;48;5;240m$GT$GT$ESC[0;38;5;240m$SEP$ESC[0m "
-
 # Increase history count.
 $global:MaximumHistoryCount = 100
 
@@ -190,6 +187,19 @@ new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
 
     $LIGHTGRAY   = $Profile_Colors.LIGHTGRAY
     $LIGHTERGRAY = $Profile_Colors.LIGHTERGRAY
+    $RED         = $Profile_Colors.RED
+
+    $END = "$ESC[0;38;5;${LIGHTGRAY}m$SEP$ESC[0m "
+
+    if (!$Profile_PromptInitialized) {
+        new-variable Profile_PromptInitialized -scope Global -option Constant -visibility Private -value $true
+
+        if (get-module -FullyQualifiedName @{ModuleName = 'PSReadLine'; ModuleVersion = '2.0.0'}) {
+            set-psreadlineoption `
+                -ContinuationPrompt "$ESC[0;38;5;252;48;5;240m$GT$GT$ESC[0;38;5;240m$SEP$ESC[0m " `
+                -PromptText $END, "$ESC[0;38;5;${RED}m$SEP$ESC[0m "
+        }
+    }
 
     $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, 0
     $prompt = $Input | foreach-object -process {
@@ -219,8 +229,7 @@ new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
             "$ESC[0;38;5;${prevbg};48;5;${LIGHTGRAY}m$SEP"
         }
 
-        "$ESC[0;38;5;${LIGHTGRAY}m$SEP$ESC[0m "
-
+        $END
     }
 
     -join $prompt
