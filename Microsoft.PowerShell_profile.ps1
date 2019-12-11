@@ -194,7 +194,8 @@ new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
     if (!$Profile_PromptInitialized) {
         new-variable Profile_PromptInitialized -scope Global -option Constant -visibility Private -value $true
 
-        if (get-module -FullyQualifiedName @{ModuleName = 'PSReadLine'; ModuleVersion = '2.0.0'}) {
+        $m = get-module -FullyQualifiedName @{ModuleName = 'PSReadLine'; ModuleVersion = '2.0.0'}
+        if ($m -and (!$m.PrivateData.PSData.Prerelease -or $m.PrivateData.PSData.Prerelease -gt 'rc1')) {
             set-psreadlineoption `
                 -ContinuationPrompt "$ESC[0;38;5;252;48;5;240m$GT$GT$ESC[0;38;5;240m$SEP$ESC[0m " `
                 -PromptText $END, "$ESC[0;38;5;${RED}m$SEP$ESC[0m "
