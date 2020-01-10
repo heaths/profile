@@ -170,7 +170,7 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
         {" $PWD ", $Profile_Colors.WHITE, $Profile_Colors.LIGHTGRAY}
         {"`n"}
         {if ($repo = &$Profile_GetBranch -and $repo.Branch) {
-            ("$($Profile_Chars.BRANCH) $($repo.Branch) "), $Profile_Colors.WHITE, $Profile_Colors.DARKGRAY
+            (" $($Profile_Chars.BRANCH) $($repo.Branch) "), $Profile_Colors.WHITE, $Profile_Colors.DARKGRAY
         }}
         {if ($c = $global:ExecutionContext.SessionState.Path.LocationStack($null).Count) {
             (' ' + '+' * $c), $Profile_Colors.LIGHTERGRAY, $Profile_Colors.LIGHTGRAY
