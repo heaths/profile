@@ -1,5 +1,49 @@
 #Requires -Version 2.0
 
+function ConvertTo-Hex {
+    [CmdletBinding()]
+    param (
+        [Parameter(ValueFromPipeline=$true)]
+        [byte[]] $Bytes,
+
+        [Parameter(Position=0)]
+        [string] $Delimiter = ', ',
+
+        [Parameter()]
+        [switch] $NoBrackets
+    )
+
+    begin {
+        $delim = ''
+        $out = new-object System.Text.StringBuilder
+
+        if (!$NoBrackets) {
+            $null = $out.Append('{')
+            if ($Delimiter.IndexOf(' ') -ge 0) {
+                $null = $out.Append(' ');
+            }
+        }
+    }
+
+    process {
+        foreach ($b in $Bytes) {
+            $null = $out.Append($delim).AppendFormat('0x{0:x2}', $b)
+            $delim = $Delimiter
+        }
+    }
+
+    end {
+        if (!$NoBrackets) {
+            if ($Delimiter.IndexOf(' ') -ge 0) {
+                $null = $out.Append(' ');
+            }
+            $null = $out.Append('}')
+        }
+
+        $out.ToString()
+    }
+}
+
 function Get-Cultures
 {
     [CmdletBinding()]

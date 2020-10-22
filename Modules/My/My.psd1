@@ -8,6 +8,7 @@ ModuleToProcess = 'My.psm1'
 TypesToProcess = 'My.types.ps1xml'
 FormatsToProcess = 'My.format.ps1xml'
 FunctionsToExport = @(
+    'ConvertTo-Hex'
     'Get-Cultures'
     'Get-FileHash'
     'Join-Object'
