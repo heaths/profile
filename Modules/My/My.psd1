@@ -19,5 +19,6 @@ FunctionsToExport = @(
     'page'
     'pick'
     'slow'
+    'which'
 )
 }

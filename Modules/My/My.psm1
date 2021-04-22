@@ -437,6 +437,18 @@ filter slow ( [int] $tempo = 100 )
     start-sleep -milliseconds $tempo
 }
 
+function which
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory=$true, Position=0)]
+        [string[]] $Name
+    )
+
+    Get-Command -Type Application, ExternalScript, Script @PSBoundParameters
+}
+
 
 # Private functions
 
