@@ -167,7 +167,11 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
         if ($preverr) {
             " $preverr ", $Profile_Colors.WHITE, $Profile_Colors.DARKRED
         }}
-        {" $PWD ", $Profile_Colors.WHITE, $Profile_Colors.LIGHTGRAY}
+        {if ($env:WSL_DISTRO_NAME) {
+            " `e]8;;file://wsl$/${env:WSL_DISTRO_NAME}$PWD`e\$PWD`e]8;;`e\ "
+        } else {
+            " `e]8;;file://$PWD`e\$PWD`e]8;;`e\ "
+        }, $Profile_Colors.WHITE, $Profile_Colors.LIGHTGRAY}
         {"`n"}
         {if ($repo = &$Profile_GetBranch -and $repo.Branch) {
             (" $($Profile_Chars.BRANCH) $($repo.Branch) "), $Profile_Colors.WHITE, $Profile_Colors.DARKGRAY
