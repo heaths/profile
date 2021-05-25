@@ -147,6 +147,10 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
         WHITE       = 231
     }
 
+    new-variable Profile_OSC8 -option Constant -visibility Private -value $(
+        $env:WT_SESSION -or $env:TERM -like 'xterm*'
+    )
+
     @(
         {if ($PSDebugContext) {'DBG', $Profile_Colors.WHITE, $Profile_Colors.RED}}
         {'PS', $Profile_Colors.WHITE, $Profile_Colors.PURPLE}
@@ -167,10 +171,14 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
         if ($preverr) {
             " $preverr ", $Profile_Colors.WHITE, $Profile_Colors.DARKRED
         }}
-        {if ($env:WSL_DISTRO_NAME) {
-            " `e]8;;file://wsl$/${env:WSL_DISTRO_NAME}$PWD`e\$PWD`e]8;;`e\ "
+        {if ($Profile_OSC8) {
+            if ($env:WSL_DISTRO_NAME) {
+                " `e]8;;file://wsl$/${env:WSL_DISTRO_NAME}$PWD`e\$PWD`e]8;;`e\ "
+            } else {
+                " `e]8;;file://$PWD`e\$PWD`e]8;;`e\ "
+            }
         } else {
-            " `e]8;;file://$PWD`e\$PWD`e]8;;`e\ "
+            " $PWD "
         }, $Profile_Colors.WHITE, $Profile_Colors.LIGHTGRAY}
         {"`n"}
         {if ($repo = &$Profile_GetBranch -and $repo.Branch) {
