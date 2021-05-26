@@ -171,11 +171,12 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
         if ($preverr) {
             " $preverr ", $Profile_Colors.WHITE, $Profile_Colors.DARKRED
         }}
-        {if ($Profile_OSC8) {
+        {if ($Profile_OSC8 -and $PWD.Provider.Name -eq 'FileSystem') {
+            $cwd = $PWD.ProviderPath
             if ($env:WSL_DISTRO_NAME) {
-                " `e]8;;file://wsl$/${env:WSL_DISTRO_NAME}$PWD`e\$PWD`e]8;;`e\ "
+                " `e]8;;file://wsl$/${env:WSL_DISTRO_NAME}$cwd`e\$PWD`e]8;;`e\ "
             } else {
-                " `e]8;;file://$PWD`e\$PWD`e]8;;`e\ "
+                " `e]8;;file://$cwd`e\$PWD`e]8;;`e\ "
             }
         } else {
             " $PWD "
