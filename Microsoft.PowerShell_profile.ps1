@@ -128,7 +128,7 @@ new-variable Profile_SearchParent -option Constant -visibility Private -value {
 
 if (!(test-path variable:\Profile_Prompt)) {
 new-variable Profile_Prompt -option Constant -visibility Private -value $(
-    # Windows PowerShell does not support `e or `u escape sequences.
+    # Windows PowerShell does not support $(Profile_Chars.ESC) or `u escape sequences.
     new-variable Profile_Chars -option Constant -visibility Private -value @{
         ESC    = [char]0x1b
         BRANCH = [char]0xe0a0
@@ -174,9 +174,9 @@ new-variable Profile_Prompt -option Constant -visibility Private -value $(
         {if ($Profile_OSC8 -and $PWD.Provider.Name -eq 'FileSystem') {
             $cwd = $PWD.ProviderPath
             if ($env:WSL_DISTRO_NAME) {
-                " `e]8;;file://wsl$/${env:WSL_DISTRO_NAME}$cwd`e\$PWD`e]8;;`e\ "
+                " $($Profile_Chars.ESC)]8;;file://wsl$/${env:WSL_DISTRO_NAME}$cwd$($Profile_Chars.ESC)\$PWD$($Profile_Chars.ESC)]8;;$($Profile_Chars.ESC)\ "
             } else {
-                " `e]8;;file://$cwd`e\$PWD`e]8;;`e\ "
+                " $($Profile_Chars.ESC)]8;;file://$cwd$($Profile_Chars.ESC)\$PWD$($Profile_Chars.ESC)]8;;$($Profile_Chars.ESC)\ "
             }
         } else {
             " $PWD "
