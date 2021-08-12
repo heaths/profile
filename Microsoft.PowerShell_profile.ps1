@@ -15,11 +15,6 @@ if (![Environment]::Is64BitProcess) {
     new-alias curl "${env:SystemRoot}\SysNative\curl.exe"
 }
 
-# Set up drive roots for convenience
-if ((test-path ~\Source\Repos) -and !(test-path Repos:\)) {
-    $null = new-psdrive -name Repos -psprovider FileSystem -root ~\Source\Repos
-}
-
 # Preferences
 [bool] $global:PromptExecutionTimePreference = $true
 
