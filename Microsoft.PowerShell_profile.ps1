@@ -18,6 +18,15 @@ if (![Environment]::Is64BitProcess) {
 # Preferences
 [bool] $global:PromptExecutionTimePreference = $true
 
+if ($PSStyle) {
+    $PSStyle.Progress.UseOSCIndicator = $true
+    $PSStyle.FileInfo.Directory = "`e[36;1m"
+    $PSStyle.FileInfo.SymbolicLink = "`e[34;1;4m"
+    $PSStyle.FileInfo.Executable = "`e[32;1;3m"
+    $PSStyle.FileInfo.Extension['.exe~'] = "`e[32;2;3m"
+    $PSStyle.FileInfo.Extension['.ps1'] = "`e[33;1;3m"
+}
+
 # Change the default prompt.
 function global:prompt {
     $Profile_Prompt | &$Profile_FormatPrompt
