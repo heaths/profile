@@ -24,7 +24,10 @@ if ($PSStyle) {
     $PSStyle.FileInfo.SymbolicLink = "`e[34;1;4m"
     $PSStyle.FileInfo.Executable = "`e[32;1;3m"
     $PSStyle.FileInfo.Extension['.exe~'] = "`e[32;2;3m"
-    $PSStyle.FileInfo.Extension['.ps1'] = "`e[33;1;3m"
+    $PSStyle.FileInfo.Extension['.ps1'] = "`e[33;3m"
+    $PSStyle.FileInfo.Extension['.psd1'] = "`e[33m"
+    $PSStyle.FileInfo.Extension['.psm1'] = "`e[33m"
+    $PSStyle.FileInfo.Extension['.ps1xml'] = "`e[33m"
 }
 
 # Change the default prompt.
