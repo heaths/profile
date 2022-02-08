@@ -390,13 +390,22 @@ function Test-Elevated
 # Page output one screen at a time
 filter page ( [int] $lines = $($Host.UI.RawUI.WindowSize.Height - 1) )
 {
-    begin { [int] $i = 0 }
+    begin
+    {
+        [int] $i = 0
+        $message = '<SPACE> next page; <CR> next line; [Q] quit'
+
+        if ($Host.UI.SupportsVirtualTerminal) {
+            $message = "`e[93m$message`e[0m"
+            $Host.UI.Write("`e[?1049h")
+        }
+    }
     process
     {
         $_
         if ( ++$i -eq $lines )
         {
-            $ch = script:write-prompt -fore 'Yellow' '<SPACE> next page; <CR> next line; [Q] quit' {
+            $ch = script:write-prompt -fore 'Yellow' $message {
                 process { 13,32 -contains $_.VirtualKeyCode -or $_.Character -ieq 'q' }
             }
             switch ( $ch )
@@ -410,9 +419,29 @@ filter page ( [int] $lines = $($Host.UI.RawUI.WindowSize.Height - 1) )
                 # Quit
                 { $ch.Character -ieq 'q' }
                 {
-                    throw (new-object System.Management.Automation.HaltCommandException)
+                    if ($Host.UI.SupportsVirtualTerminal) {
+                        $Host.UI.WriteLine("`e[?1049l")
+                    }
+
+                    #throw (new-object System.Management.Automation.HaltCommandException)
+                    return
                 }
             }
+        }
+    }
+    end
+    {
+        $message = '[Q] quit'
+        if ($Host.UI.SupportsVirtualTerminal) {
+            $message = "`e[93m$message`e[0m"
+        }
+
+        $null = script:write-prompt -fore 'Yellow' $message {
+            process { $_.Character -ieq 'q' }
+        }
+
+        if ($Host.UI.SupportsVirtualTerminal) {
+            $Host.UI.WriteLine("`e[?1049l")
         }
     }
 }
@@ -476,7 +505,7 @@ function write-prompt
 
     # Store the cursor position before displaying the prompt
     $current = $Host.UI.RawUI.CursorPosition
-    write-host $message -nonewline -background $BackgroundColor -foreground $ForegroundColor
+    $Host.UI.Write($ForegroundColor, $BackgroundColor, $message)
 
     try
     {
