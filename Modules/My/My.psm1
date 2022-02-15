@@ -423,8 +423,7 @@ filter page ( [int] $lines = $($Host.UI.RawUI.WindowSize.Height - 1) )
                         $Host.UI.WriteLine("`e[?1049l")
                     }
 
-                    #throw (new-object System.Management.Automation.HaltCommandException)
-                    return
+                    throw (new-object System.Management.Automation.HaltCommandException)
                 }
             }
         }
