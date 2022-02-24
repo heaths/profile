@@ -215,11 +215,29 @@ new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
         new-variable Profile_PromptInitialized -scope Global -option Constant -visibility Private -value $true
 
         $m = get-module -FullyQualifiedName @{ModuleName = 'PSReadLine'; ModuleVersion = '2.0.0'}
+        $opts = @{}
+
         if ($m -and (!$m.PrivateData.PSData.Prerelease -or $m.PrivateData.PSData.Prerelease -ge 'rc1')) {
-            set-psreadlineoption `
-                -ContinuationPrompt "$ESC[0;38;5;252;48;5;240m$GT$GT$ESC[0;38;5;240m$SEP$ESC[0m " `
-                -PromptText $END, "$ESC[0;38;5;${RED}m$SEP$ESC[0m "
+            $opts['ContinuationPrompt'] = "$ESC[0;38;5;252;48;5;240m$GT$GT$ESC[0;38;5;240m$SEP$ESC[0m "
+            $opts['PromptText'] = $END, "$ESC[0;38;5;${RED}m$SEP$ESC[0m "
         }
+
+        if ($m.Version -ge '2.1.0') {
+            $opts['Colors'] += @{
+                InlinePrediction="`e[38;5;240m"
+            }
+            $opts['PredictionSource'] = 'HistoryAndPlugin'
+        }
+
+        if ($m.Version -gt '2.1.0') {
+            $opts['Colors'] += @{
+                ListPredictionSelected = "`e[48;5;240m"
+            }
+
+            set-psreadlinekeyhandler -Chord 'Ctrl+f' -Function 'ForwardWord'
+        }
+
+        set-psreadlineoption @opts
     }
 
     $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, 0
