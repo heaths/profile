@@ -38,6 +38,10 @@ function global:prompt {
 # Increase history count.
 $global:MaximumHistoryCount = 100
 
+if (!$IsWindows) {
+    $env:PSModulePath += ":$PSScriptRoot/Modules"
+}
+
 # Remember original title.
 if (!(test-path variable:\Profile_OriginalTitle)) {
     new-variable Profile_OriginalTitle -option Constant -visibility Private -value $(
