@@ -40,7 +40,13 @@ $global:MaximumHistoryCount = 100
 
 # Remember original title.
 if (!(test-path variable:\Profile_OriginalTitle)) {
-    new-variable Profile_OriginalTitle -option Constant -visibility Private -value ([Console]::Title)
+    new-variable Profile_OriginalTitle -option Constant -visibility Private -value $(
+        if ($IsWindows) {
+            return [Console]::Title
+        }
+
+        ''
+    )
 }
 
 # Private functions
