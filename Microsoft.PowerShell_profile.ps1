@@ -42,17 +42,6 @@ if (!$IsWindows) {
     $env:PSModulePath += ":$PSScriptRoot/Modules"
 }
 
-# Remember original title.
-if (!(test-path variable:\Profile_OriginalTitle)) {
-    new-variable Profile_OriginalTitle -option Constant -visibility Private -value $(
-        if ($IsWindows) {
-            return [Console]::Title
-        }
-
-        ''
-    )
-}
-
 # Private functions
 
 if (!(test-path variable:\Profile_GetBranch)) {
@@ -242,6 +231,9 @@ new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
     if (!$Profile_PromptInitialized) {
         new-variable Profile_PromptInitialized -scope Global -option Constant -visibility Private -value $true
 
+        $title = if ($IsWindows) { [Console]::Title } else { '' }
+        new-variable Profile_OriginalTitle -scope Global -option Constant -visibility Private -value $title
+
         $m = get-module -FullyQualifiedName @{ModuleName = 'PSReadLine'; ModuleVersion = '2.0.0'}
         $opts = @{}
 
@@ -252,14 +244,14 @@ new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
 
         if ($m.Version -ge '2.1.0') {
             $opts['Colors'] += @{
-                InlinePrediction="`e[38;5;240m"
+                InlinePrediction="$ESC[38;5;240m"
             }
             $opts['PredictionSource'] = 'HistoryAndPlugin'
         }
 
         if ($m.Version -gt '2.1.0') {
             $opts['Colors'] += @{
-                ListPredictionSelected = "`e[48;5;240m"
+                ListPredictionSelected = "$ESC[48;5;240m"
             }
 
             set-psreadlinekeyhandler -Chord 'Ctrl+f' -Function 'ForwardWord'
