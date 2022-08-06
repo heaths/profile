@@ -244,13 +244,15 @@ new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
 
         if ($m.Version -ge '2.1.0') {
             $opts['Colors'] += @{
-                InlinePrediction="$ESC[38;5;240m"
+                # Light gray italic
+                InlinePrediction="$ESC[38;5;240;3m"
             }
             $opts['PredictionSource'] = 'HistoryAndPlugin'
         }
 
         if ($m.Version -gt '2.1.0') {
             $opts['Colors'] += @{
+                # Light gray
                 ListPredictionSelected = "$ESC[48;5;240m"
             }
 
