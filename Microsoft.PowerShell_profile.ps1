@@ -15,9 +15,6 @@ if (![Environment]::Is64BitProcess) {
     new-alias curl "${env:SystemRoot}\SysNative\curl.exe"
 }
 
-# Preferences
-[bool] $global:PromptExecutionTimePreference = $true
-
 if ($PSStyle) {
     $PSStyle.Progress.UseOSCIndicator = $true
     $PSStyle.FileInfo.Directory = "`e[36;1m"
@@ -31,9 +28,7 @@ if ($PSStyle) {
 }
 
 # Change the default prompt.
-function global:prompt {
-    $Profile_Prompt | &$Profile_FormatPrompt
-}
+oh-my-posh init pwsh --config ~/.config/oh-my-posh/theme.omp.yml | invoke-expression
 
 # Increase history count.
 $global:MaximumHistoryCount = 100
@@ -145,155 +140,6 @@ new-variable Profile_SearchParent -option Constant -visibility Private -value {
             resolve-path $parent
         }
     }
-}}
-
-if (!(test-path variable:\Profile_Prompt)) {
-new-variable Profile_Prompt -option Constant -visibility Private -value $(
-    # Windows PowerShell does not support $(Profile_Chars.ESC) or `u escape sequences.
-    new-variable Profile_Chars -option Constant -visibility Private -value @{
-        ESC    = [char]0x1b
-        BRANCH = [char]0xe0a0
-        SEP    = [char]0xe0b0
-        GT     = [char]0xe0b1
-    }
-
-    new-variable Profile_Colors -option Constant -visibility Private -value @{
-        BLUE        = 31
-        DARKGRAY    = 236
-        LIGHTGRAY   = 240
-        LIGHTERGRAY = 252
-        PURPLE      = 55
-        RED         = 1
-        DARKRED     = 52
-        WHITE       = 231
-    }
-
-    new-variable Profile_OSC8 -option Constant -visibility Private -value $(
-        $env:WT_SESSION -or $env:TERM -like 'xterm*'
-    )
-
-    @(
-        {if ($PSDebugContext) {'DBG', $Profile_Colors.WHITE, $Profile_Colors.RED}}
-        {'PS', $Profile_Colors.WHITE, $Profile_Colors.PURPLE}
-        {if ($h = get-history -count 1) {
-            (' {0} ' -f $h.Id), $Profile_Colors.WHITE, $Profile_Colors.BLUE
-            if ($PromptExecutionTimePreference) {
-                (' {0:hh\:mm\:ss\.fff} ' -f $h.ExecutionTime), $Profile_Colors.WHITE, $Profile_Colors.BLUE
-            }
-            if ($prevhid -ne $h.Id) {
-                $script:prevhid = $h.Id
-                $script:preverr = 0
-            }
-        }}
-        {if ($global:LASTEXITCODE) {
-            $script:preverr = $global:LASTEXITCODE
-            $global:LASTEXITCODE = 0
-        }
-        if ($preverr) {
-            " $preverr ", $Profile_Colors.WHITE, $Profile_Colors.DARKRED
-        }}
-        {if ($Profile_OSC8 -and $PWD.Provider.Name -eq 'FileSystem') {
-            $cwd = $PWD.ProviderPath
-            if ($env:WSL_DISTRO_NAME) {
-                " $($Profile_Chars.ESC)]8;;file://wsl$/${env:WSL_DISTRO_NAME}$cwd$($Profile_Chars.ESC)\$PWD$($Profile_Chars.ESC)]8;;$($Profile_Chars.ESC)\ "
-            } else {
-                " $($Profile_Chars.ESC)]8;;file://$cwd$($Profile_Chars.ESC)\$PWD$($Profile_Chars.ESC)]8;;$($Profile_Chars.ESC)\ "
-            }
-        } else {
-            " $PWD "
-        }, $Profile_Colors.WHITE, $Profile_Colors.LIGHTGRAY}
-        {"`n"}
-        {if ($repo = &$Profile_GetBranch -and $repo.Branch) {
-            [Console]::Title = $repo.Clone
-            (" $($Profile_Chars.BRANCH) $($repo.Branch) "), $Profile_Colors.WHITE, $Profile_Colors.DARKGRAY
-        } else {
-            [Console]::Title = $Profile_OriginalTitle
-        }}
-        {if ($c = $global:ExecutionContext.SessionState.Path.LocationStack($null).Count) {
-            (' ' + '+' * $c), $Profile_Colors.LIGHTERGRAY, $Profile_Colors.LIGHTGRAY
-        }}
-        {([string]$Profile_Chars.GT * $NestedPromptLevel), $Profile_Colors.LIGHTERGRAY, $Profile_Colors.LIGHTGRAY}
-    )
-)}
-
-if (!(test-path variable:\Profile_FormatPrompt)) {
-new-variable Profile_FormatPrompt -option Constant -visibility Private -value {
-    $ESC = $Profile_Chars.ESC
-    $SEP = $Profile_Chars.SEP
-    $GT  = $Profile_Chars.GT
-
-    $LIGHTGRAY   = $Profile_Colors.LIGHTGRAY
-    $LIGHTERGRAY = $Profile_Colors.LIGHTERGRAY
-    $RED         = $Profile_Colors.RED
-
-    $END = "$ESC[0;38;5;${LIGHTGRAY}m$SEP$ESC[0m "
-
-    if (!$Profile_PromptInitialized) {
-        new-variable Profile_PromptInitialized -scope Global -option Constant -visibility Private -value $true
-
-        $title = if ($IsWindows) { [Console]::Title } else { '' }
-        new-variable Profile_OriginalTitle -scope Global -option Constant -visibility Private -value $title
-
-        $m = get-module -FullyQualifiedName @{ModuleName = 'PSReadLine'; ModuleVersion = '2.0.0'}
-        $opts = @{}
-
-        if ($m -and (!$m.PrivateData.PSData.Prerelease -or $m.PrivateData.PSData.Prerelease -ge 'rc1')) {
-            $opts['ContinuationPrompt'] = "$ESC[0;38;5;252;48;5;240m$GT$GT$ESC[0;38;5;240m$SEP$ESC[0m "
-            $opts['PromptText'] = $END, "$ESC[0;38;5;${RED}m$SEP$ESC[0m "
-        }
-
-        if ($m.Version -ge '2.1.0') {
-            $opts['Colors'] += @{
-                # Light gray italic
-                InlinePrediction="$ESC[38;5;240;3m"
-            }
-            $opts['PredictionSource'] = 'HistoryAndPlugin'
-        }
-
-        if ($m.Version -gt '2.1.0') {
-            $opts['Colors'] += @{
-                # Light gray
-                ListPredictionSelected = "$ESC[48;5;240m"
-            }
-
-            set-psreadlinekeyhandler -Chord 'Ctrl+f' -Function 'ForwardWord'
-        }
-
-        set-psreadlineoption @opts
-    }
-
-    $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, 0
-    $prompt = $Input | foreach-object -process {
-        $str, $fg, $bg, $next = $_.Invoke()
-        do {
-            if (!$str) {
-                return
-            }
-
-            if ($str -eq "`n") {
-                "$ESC[0;38;5;${prevbg}m$SEP$ESC[0m`n"
-                $script:prevstr, $script:prevfg, $script:prevbg = $null, 0, $LIGHTGRAY
-                return
-            } elseif ($prevstr -and $prevbg -ne $bg) {
-                "$ESC[0;38;5;${prevbg};48;5;${bg}m$SEP"
-            } elseif ($prevstr -and $prevbg -eq $bg -and !$prevstr.EndsWith('+')) {
-                "$ESC[38;5;${LIGHTERGRAY}m$GT$ESC[38;5;${prevfg}m"
-            }
-
-            "$ESC[0;38;5;$fg;48;5;${bg}m$str"
-            $script:prevstr, $script:prevfg, $script:prevbg = $str, $fg, $bg
-
-            $str, $fg, $bg, $next = $next
-        } while ($bg)
-    } -end {
-        if ($prevbg -ne $LIGHTGRAY) {
-            "$ESC[0;38;5;${prevbg};48;5;${LIGHTGRAY}m$SEP"
-        }
-
-        $END
-    }
-
-    -join $prompt
 }}
 
 # Useful variables.
