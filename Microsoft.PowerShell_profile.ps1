@@ -28,7 +28,12 @@ if ($PSStyle) {
 }
 
 # Change the default prompt.
-oh-my-posh init pwsh --config ~/.config/oh-my-posh/theme.omp.yml | invoke-expression
+if (Get-Command -Type Application 'o-my-posh' -ErrorAction Ignore) {
+    oh-my-posh init pwsh --config ~/.config/oh-my-posh/theme.omp.yml | invoke-expression
+} else {
+    Write-Host 'Missing "oh-my-posh"; loading fallback prompt...' -ForegroundColor Yellow
+    Import-Module MyPrompt
+}
 
 # Increase history count.
 $global:MaximumHistoryCount = 100

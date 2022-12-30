@@ -1,3 +1,4 @@
 Help/
 Modules/*
 !Modules/My
+!Modules/MyPrompt
