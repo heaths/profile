@@ -202,23 +202,6 @@ function Format-Prompt {
             $opts['PromptText'] = $END, "$ESC[0;38;5;${RED}m$SEP$ESC[0m "
         }
 
-        if ($m.Version -ge '2.1.0') {
-            $opts['Colors'] += @{
-                # Light gray italic
-                InlinePrediction="$ESC[38;5;240;3m"
-            }
-            $opts['PredictionSource'] = 'HistoryAndPlugin'
-        }
-
-        if ($m.Version -gt '2.1.0') {
-            $opts['Colors'] += @{
-                # Light gray
-                ListPredictionSelected = "$ESC[48;5;240m"
-            }
-
-            set-psreadlinekeyhandler -Chord 'Ctrl+f' -Function 'ForwardWord'
-        }
-
         set-psreadlineoption @opts
     }
 

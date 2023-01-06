@@ -35,6 +35,31 @@ if (Get-Command -Type Application 'oh-my-posh' -ErrorAction Ignore) {
     Import-Module MyPrompt
 }
 
+# Set prompt options.
+&{
+    $m = get-module 'PSReadLine'
+    $opts = @{}
+
+    if ($m.Version -ge '2.1.0') {
+        $opts['Colors'] += @{
+            # Light gray italic
+            InlinePrediction="`e[38;5;240;3m"
+        }
+        $opts['PredictionSource'] = 'HistoryAndPlugin'
+    }
+
+    if ($m.Version -gt '2.1.0') {
+        $opts['Colors'] += @{
+            # Light gray
+            ListPredictionSelected = "`e[48;5;240m"
+        }
+
+        set-psreadlinekeyhandler -Chord 'Ctrl+f' -Function 'ForwardWord'
+    }
+
+    set-psreadlineoption @opts
+}
+
 # Increase history count.
 $global:MaximumHistoryCount = 100
 
