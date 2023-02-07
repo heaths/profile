@@ -40,18 +40,23 @@ if (Get-Command -Type Application 'oh-my-posh' -ErrorAction Ignore) {
     $m = get-module 'PSReadLine'
     $opts = @{}
 
+    # Windows PowerShell has no Unicode escape sequences.
+    $ESC = [char]0x1b
     if ($m.Version -ge '2.1.0') {
         $opts['Colors'] += @{
             # Light gray italic
-            InlinePrediction="`e[38;5;240;3m"
+            InlinePrediction="$ESC[38;5;240;3m"
         }
-        $opts['PredictionSource'] = 'HistoryAndPlugin'
+
+        if ($PSVersionTable.PSVersion -ge '7.2') {
+            $opts['PredictionSource'] = 'HistoryAndPlugin'
+        }
     }
 
     if ($m.Version -gt '2.1.0') {
         $opts['Colors'] += @{
             # Light gray
-            ListPredictionSelected = "`e[48;5;240m"
+            ListPredictionSelected = "$ESC[48;5;240m"
         }
 
         set-psreadlinekeyhandler -Chord 'Ctrl+f' -Function 'ForwardWord'
@@ -63,7 +68,8 @@ if (Get-Command -Type Application 'oh-my-posh' -ErrorAction Ignore) {
 # Increase history count.
 $global:MaximumHistoryCount = 100
 
-if (!$IsWindows) {
+# Windows PowerShell does not define $IsWindows.
+if ($IsWindows -eq $false) {
     $env:PSModulePath += ":$PSScriptRoot/Modules"
 }
 
