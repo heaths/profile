@@ -4,6 +4,8 @@
         <View>
             <Name>Windows</Name>
             <ViewSelectedBy>
+                <TypeName>System.IO.DirectoryInfo</TypeName>
+                <TypeName>System.IO.FileInfo</TypeName>
                 <SelectionSetName>FileSystemTypes</SelectionSetName>
             </ViewSelectedBy>
             <GroupBy>
@@ -55,6 +57,8 @@
         <View>
             <Name>Windows</Name>
             <ViewSelectedBy>
+                <TypeName>System.IO.DirectoryInfo</TypeName>
+                <TypeName>System.IO.FileInfo</TypeName>
                 <SelectionSetName>FileSystemTypes</SelectionSetName>
             </ViewSelectedBy>
             <GroupBy>
