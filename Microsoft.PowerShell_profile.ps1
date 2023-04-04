@@ -40,16 +40,19 @@ if (Get-Command -Type Application 'oh-my-posh' -ErrorAction Ignore) {
     $m = get-module 'PSReadLine'
     $opts = @{}
 
-    # Windows PowerShell has no Unicode escape sequences.
+    # Windows PowerShell does not support "`e".
     $ESC = [char]0x1b
+
     if ($m.Version -ge '2.1.0') {
         $opts['Colors'] += @{
             # Light gray italic
             InlinePrediction="$ESC[38;5;240;3m"
         }
 
-        if ($PSVersionTable.PSVersion -ge '7.2') {
-            $opts['PredictionSource'] = 'HistoryAndPlugin'
+        $opts['PredictionSource'] = if ($PSEdition -eq 'Desktop') {
+            'History'
+        } else {
+            'HistoryAndPlugin'
         }
     }
 
