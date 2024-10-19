@@ -16,7 +16,9 @@ if (![Environment]::Is64BitProcess) {
 }
 
 if ($PSStyle) {
-    $PSStyle.Progress.UseOSCIndicator = $true
+    if (!$IsMacOS) {
+      $PSStyle.Progress.UseOSCIndicator = $true
+    }
     $PSStyle.FileInfo.Directory = "`e[36;1m"
     $PSStyle.FileInfo.SymbolicLink = "`e[34;1;4m"
     $PSStyle.FileInfo.Executable = "`e[32;1;3m"
