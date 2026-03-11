@@ -31,6 +31,19 @@ if ($PSStyle) {
 
 # Change the default prompt.
 if (Get-Command -Type Application 'oh-my-posh' -ErrorAction Ignore) {
+    # Work around https://github.com/JanDeDobbeleer/oh-my-posh/issues/7377
+    if ($function:PSConsoleHostReadLine) {
+        $function:_omp_host_readline = $function:PSConsoleHostReadLine
+
+        $function:PSConsoleHostReadLine = {
+            [System.Diagnostics.DebuggerHidden()]
+            param()
+
+            _omp_host_readline
+            Write-Host -NoNewline "`e]133;C`a"
+        }
+    }
+
     oh-my-posh init pwsh --config ~/.config/oh-my-posh/theme.omp.yml | invoke-expression
 } else {
     Write-Host 'Missing "oh-my-posh"; loading fallback prompt...' -ForegroundColor Yellow
