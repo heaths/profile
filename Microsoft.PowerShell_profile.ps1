@@ -39,8 +39,12 @@ if (Get-Command -Type Application 'oh-my-posh' -ErrorAction Ignore) {
             [System.Diagnostics.DebuggerHidden()]
             param()
 
-            _omp_host_readline
-            Write-Host -NoNewline "`e]133;C`a"
+            $line = _omp_host_readline
+            if (![String]::IsNullOrWhiteSpace($line)) {
+                Write-Host -NoNewline "`e]133;C;cmdline_url=$([Uri]::EscapeUriString($line))`a"
+            }
+
+            $line
         }
     }
 
