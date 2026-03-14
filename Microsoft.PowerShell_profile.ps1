@@ -41,6 +41,8 @@ if (Get-Command -Type Application 'oh-my-posh' -ErrorAction Ignore) {
 
             $line = _omp_host_readline
             if (![String]::IsNullOrWhiteSpace($line)) {
+                # Work around https://github.com/ghostty-org/ghostty/discussions/11477
+                Write-Host -NoNewline "`e]2;$($line -replace '\p{Cc}', '')`a"
                 Write-Host -NoNewline "`e]133;C;cmdline_url=$([Uri]::EscapeUriString($line))`a"
             }
 
