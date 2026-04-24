@@ -113,4 +113,10 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
     }
 }
 
+if ((Get-Command brew) -and (Test-Path ($completions = "$(brew --prefix)/share/pwsh/completions"))) {
+  foreach ($f in Get-ChildItem -Path $completions -File) {
+    . $f
+  }
+}
+
 # vim: set et sts=4 sw=4 ts=8:
